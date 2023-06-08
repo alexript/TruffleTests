@@ -18,6 +18,9 @@ package net.napilnik.truffletests.vm;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.util.Optional;
 import org.graalvm.polyglot.Source;
@@ -35,6 +38,10 @@ public class VMScript {
         this(file.getName(), readFile(file));
     }
 
+    public VMScript(String filename, InputStream is) throws VMException {
+        this(filename, readInputStream(is));
+    }
+
     public VMScript(String scriptFileName, String scriptFileBody) throws VMException {
         this.lng = getLanguageFor(scriptFileName);
         try {
@@ -44,10 +51,29 @@ public class VMScript {
         }
     }
 
+    private static String readInputStream(InputStream is) throws VMException {
+        String fileBody = "";
+
+        try (Reader reader = new InputStreamReader(is, "UTF-8")) {
+            BufferedReader breader = new BufferedReader(reader);
+            StringBuilder builder = new StringBuilder();
+            char[] buffer = new char[8192];
+            int read;
+            while ((read = breader.read(buffer, 0, buffer.length)) > 0) {
+                builder.append(buffer, 0, read);
+            }
+            fileBody = builder.toString();
+        } catch (IOException ex) {
+            throw new VMException(ex);
+        }
+        return fileBody;
+    }
+
     private static String readFile(File file) throws VMException {
         String fileBody = "";
-        try (BufferedReader reader = Files.newBufferedReader(file.toPath())) {
-            fileBody = reader.readLine();
+        try {
+            byte[] bytes = Files.readAllBytes(file.toPath());
+            fileBody = new String(bytes, "UTF-8");
         } catch (IOException ex) {
             throw new VMException(ex);
         }

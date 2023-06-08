@@ -80,6 +80,24 @@ class VMEvaluator implements PolyglotContextProvider {
 
     }
 
+    public <T> T eval(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
+        if (!useInspector) {
+            return evalImpl(objectName, fieldName, targetType, objArray);
+        }
+        VMInspectionListener enterListener = VMInspector.createInspectionListener("On enter");
+        VMInspectionListener returnListener = VMInspector.createInspectionListener("On return");
+        VMInspector inspector = new VMInspector(this, enterListener, returnListener);
+        try (inspector) {
+            return evalImpl(objectName, fieldName, targetType, objArray);
+        } catch (VMException next) {
+            throw next;
+        } catch (Exception ex) {
+            processScriptException(ex, enterListener, "%s::%s".formatted(objectName, fieldName));
+        }
+        return null;
+
+    }
+
     public void eval(VMScript script) throws VMException {
         if (!useInspector) {
             evalImpl(script);
@@ -156,6 +174,45 @@ class VMEvaluator implements PolyglotContextProvider {
                 }
                 if (!function.canExecute()) {
                     throw new VMNoFunctionException(functionName + " is not a function");
+                }
+                if (objArray == null) {
+                    objArray = new Object[0];
+                }
+
+                if (targetType == null || Void.class.isInstance(targetType)) {
+                    function.executeVoid(objArray);
+                } else {
+                    result = function.execute(objArray);
+                }
+                if (result == null) {
+                    return null;
+                }
+                return result.as(targetType);
+            } finally {
+                ctx.leave();
+            }
+        }
+    }
+
+    private <T> T evalImpl(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
+        synchronized (this.getContext()) {
+            try {
+                Value result = null;
+                ctx.enter();
+                Value function;
+
+                try {
+                    Value member = this.getBindings().getMember(objectName);
+                    function = member.getMember(fieldName);
+                } catch (PolyglotException ex) {
+                    throw new VMException(ex);
+                }
+
+                if (function == null) {
+                    throw new VMNoFunctionException("Function '" + fieldName + "' not found");
+                }
+                if (!function.canExecute()) {
+                    throw new VMNoFunctionException(fieldName + " is not a function");
                 }
                 if (objArray == null) {
                     objArray = new Object[0];

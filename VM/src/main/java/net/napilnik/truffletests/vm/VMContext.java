@@ -18,6 +18,8 @@ package net.napilnik.truffletests.vm;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.EnvironmentAccess;
@@ -37,6 +39,11 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     private static VMContext constructGlobalContext() {
         VMContext vmContext = new VMContext(VMLanguage.JS, null, false);
         GlobalBindings.bind(vmContext);
+        try {
+            VMStdLib.apply(vmContext);
+        } catch (VMException ex) {
+            Logger.getLogger(VMContext.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return vmContext;
     }
 

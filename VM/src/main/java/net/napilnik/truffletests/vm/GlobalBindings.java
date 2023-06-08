@@ -15,6 +15,7 @@
  */
 package net.napilnik.truffletests.vm;
 
+import net.napilnik.truffletests.objects.DateOverride;
 import net.napilnik.truffletests.objects.Pair;
 
 /**
@@ -24,6 +25,7 @@ import net.napilnik.truffletests.objects.Pair;
 class GlobalBindings {
 
     protected static void bind(VMContext ctx) {
+        ctx.addClass(DateOverride.class);
         ctx.addClass(Pair.class);
     }
 }

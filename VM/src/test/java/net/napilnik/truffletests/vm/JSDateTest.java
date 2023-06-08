@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.napilnik.truffletests.objects.DateOverride;
 import org.graalvm.polyglot.Value;
 import org.junit.jupiter.api.Assertions;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -66,21 +67,6 @@ public class JSDateTest {
         }
     }
 
-    private static VMScript stdlib;
-
-    static {
-        try {
-            stdlib = new VMScript("stdlib.js", """
-                                                           function __getJsDate(javaDate) {
-                                                               let d= new Date(javaDate.getTime());
-                                                               return d;
-                                                           }
-                                                           """);
-        } catch (VMException ex) {
-            Logger.getLogger(JSDateTest.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     @Test
     public void testJavaToJsDateObject() {
         try {
@@ -102,6 +88,11 @@ public class JSDateTest {
 
                 public void run() {
                     target.stdContext = VM.context();
+                    try {
+                        VMStdLib.apply(target.stdContext);
+                    } catch (VMException ex) {
+                        Logger.getLogger(JSDateTest.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
             }
@@ -109,7 +100,6 @@ public class JSDateTest {
             Thread t = new Thread(new StdContextCreator(stdContextHolder));
             t.start();
             t.join();
-            stdContextHolder.stdContext.eval(stdlib);
 
             class Result {
 
@@ -135,7 +125,7 @@ public class JSDateTest {
                         VMScript script = new VMScript("testJavaToJsDateObject.js", "function getDate(jsDate) {return jsDate;}");
                         VMContext context = VM.context();
                         try (context) {
-                            Value jsDate = stdContextHolder.stdContext.eval("__getJsDate", Value.class, now);
+                            Value jsDate = VMStdLib.javaDateToJSDate(stdContextHolder.stdContext, now);
                             context.eval(script);
                             Value result = context.eval("getDate", Value.class, jsDate);
                             LocalDate asDate = result.asDate();
@@ -192,15 +182,6 @@ public class JSDateTest {
 
     }
 
-    @VMContextInjection(contextObjectName = "Date")
-    public static class DateOverride {
-
-        @VMAccess
-        public DateOverride() {
-
-        }
-    }
-
     @Test
     public void testDateOverride() {
 
@@ -210,7 +191,34 @@ public class JSDateTest {
             try (context) {
                 context.addClass(DateOverride.class);
                 context.eval(script);
-                DateOverride result = context.eval("getDate", DateOverride.class);
+                Value result = context.eval("getDate", Value.class);
+                System.out.println(result.asProxyObject().toString());
+                assertNotNull(result);
+            }
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @VMContextInjection(contextObjectName = "Date")
+    public static class DateOverride2 {
+
+        @VMAccess
+        public DateOverride2() {
+
+        }
+    }
+
+    @Test
+    public void testDateOverride2() {
+
+        try {
+            VMScript script = new VMScript("testDateOverride2.js", "function getDate() {return new Date();}");
+            VMContext context = VM.context();
+            try (context) {
+                context.addClass(DateOverride2.class);
+                context.eval(script);
+                DateOverride2 result = context.eval("getDate", DateOverride2.class);
                 assertNotNull(result);
             }
         } catch (VMException ex) {
