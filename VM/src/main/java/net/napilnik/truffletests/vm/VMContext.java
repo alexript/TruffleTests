@@ -102,7 +102,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         addObject(identificator, object);
     }
 
-    private void addObject(String identificator, Object object) {
+    public void addObject(String identificator, Object object) {
         synchronized (this.getContext()) {
             Value bindings = this.getBindings();
             Object jsObject = prepareJSObject(object);
