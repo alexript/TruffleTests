@@ -51,7 +51,6 @@ public class JSDateTest {
     @Test
     public void testJsDateObject() {
         try {
-            Date now = new Date();
             VMScript script = new VMScript("testJsDateObject.js", "function getDate() {return new Date();}");
             VMContext context = VM.context();
             try (context) {
@@ -59,7 +58,7 @@ public class JSDateTest {
                 context.eval(script);
                 Value result = context.eval("getDate", Value.class);
                 LocalDate asDate = result.asDate();
-                LocalTime asTime = result.asTime();
+
                 assertNotNull(asDate);
             }
         } catch (VMException ex) {
@@ -187,12 +186,18 @@ public class JSDateTest {
 
         try {
             VMScript script = new VMScript("testDateOverride.js", "function getDate() {return new Date();}");
+            VMScript scriptJson = new VMScript("getDateAsJson.js", "function getDateAsJson() {let d= new Date(); return d.toJSON();}");
             VMContext context = VM.context();
             try (context) {
                 context.addClass(DateOverride.class);
                 context.eval(script);
                 Value result = context.eval("getDate", Value.class);
                 System.out.println(result.asProxyObject().toString());
+                assertNotNull(result);
+
+                context.eval(scriptJson);
+                String json = context.eval("getDateAsJson", String.class);
+                System.out.println(json);
                 assertNotNull(result);
             }
         } catch (VMException ex) {
