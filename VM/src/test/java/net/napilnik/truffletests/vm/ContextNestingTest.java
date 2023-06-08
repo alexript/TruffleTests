@@ -53,7 +53,7 @@ public class ContextNestingTest {
                         }
                     """);
 
-            try (VMContext context = VM.context()) {
+            try (VMContext context = VM.context("OuterContext")) {
                 context.eval(script);
 
                 Integer result = context.eval("getAnswer", Integer.class);
@@ -64,7 +64,7 @@ public class ContextNestingTest {
 
                 context.addObject("OuterObject", new Object());
 
-                try (VMContext nestedContext = VM.context(context)) {
+                try (VMContext nestedContext = VM.context("InnerContext", context)) {
 
                     nestedContext.eval(scriptNested);
 
@@ -88,7 +88,7 @@ public class ContextNestingTest {
         try {
             Date now = new Date();
             System.out.println("-ts- Test: %1$s --------- <start: %2$tH:%2$tM:%2$tS> --------".formatted("testPerfomance", now));
-            try (VMContext context = VM.context()) {
+            try (VMContext context = VM.context("OuterContext")) {
                 Random rnd = new Random();
                 long iterations = 10000;
                 StringBuilder sb = new StringBuilder();
@@ -105,7 +105,7 @@ public class ContextNestingTest {
                 Date fullfill = new Date();
                 System.out.println("-ts- Test: %1$s -------------- <fullfill: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted("testPerfomance", fullfill, fullfill.getTime() - now.getTime()));
 
-                try (VMContext nestedContext = VM.context(context)) {
+                try (VMContext nestedContext = VM.context("NestedContext", context)) {
 
                 }
 

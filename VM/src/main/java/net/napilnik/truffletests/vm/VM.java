@@ -32,19 +32,27 @@ public class VM {
     }
 
     public static VMContext context() {
-        return context(inspectedEvaluation);
+        return context((String) null);
     }
 
-    protected static VMContext context(boolean withInspection) {
-        return context(VMContext.GLOBALCONTEXT, withInspection);
+    public static VMContext context(String contextName) {
+        return context(contextName, inspectedEvaluation);
+    }
+
+    protected static VMContext context(String contextName, boolean withInspection) {
+        return context(contextName, VMContext.GLOBALCONTEXT, withInspection);
     }
 
     public static VMContext context(VMContext parentContext) {
-        return context(parentContext, inspectedEvaluation);
+        return context((String) null, parentContext);
     }
 
-    protected static VMContext context(VMContext parentContext, boolean withInspection) {
-        VMContext instance = parentContext.create(withInspection);
+    public static VMContext context(String contextName, VMContext parentContext) {
+        return context(contextName, parentContext, inspectedEvaluation);
+    }
+
+    protected static VMContext context(String contextName, VMContext parentContext, boolean withInspection) {
+        VMContext instance = parentContext.create(contextName, withInspection);
         prepareInstance(instance);
         return instance;
     }

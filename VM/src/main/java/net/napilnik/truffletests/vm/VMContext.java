@@ -35,11 +35,12 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
 
     private final List<VMContext> childs;
     private final VMContext parent;
+    private final String contextName;
 
     protected static final VMContext GLOBALCONTEXT = constructGlobalContext();
 
     private static VMContext constructGlobalContext() {
-        VMContext vmContext = new VMContext(VMLanguage.JS, null, false);
+        VMContext vmContext = new VMContext("<RootContext>", VMLanguage.JS, null, false);
         GlobalBindings.bind(vmContext);
         try {
             VMStdLib.apply(vmContext);
@@ -49,14 +50,19 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         return vmContext;
     }
 
-    private VMContext(VMContext parent, boolean withInspection) {
-        this(VMLanguage.JS, parent, withInspection);
+    private VMContext(String contextName, VMContext parent, boolean withInspection) {
+        this(contextName, VMLanguage.JS, parent, withInspection);
     }
 
-    private VMContext(VMLanguage lng, VMContext parent, boolean withInspection) {
+    private VMContext(String contextName, VMLanguage lng, VMContext parent, boolean withInspection) {
         super(lng, buildContext(lng, parent), withInspection);
         childs = new ArrayList<>();
         this.parent = parent;
+        this.contextName = contextName;
+    }
+
+    public String getName() {
+        return contextName;
     }
 
     private static Context buildContext(VMLanguage lng, PolyglotContextProvider parent) {
@@ -89,12 +95,12 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
 
     }
 
-    protected VMContext create(boolean withInspection) {
-        return new VMContext(this, withInspection);
+    protected VMContext create(String contextName, boolean withInspection) {
+        return new VMContext(contextName, this, withInspection);
     }
 
-    protected VMContext create(VMLanguage lng, boolean withInspection) {
-        return new VMContext(lng, this, withInspection);
+    protected VMContext create(String contextName, VMLanguage lng, boolean withInspection) {
+        return new VMContext(contextName, lng, this, withInspection);
     }
 
     public void addClass(Class someClass) {
