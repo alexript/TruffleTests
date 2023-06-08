@@ -59,16 +59,17 @@ public class DateOverride extends Date implements ProxyObject {
     @Override
     public Object getMember(String key) {
         switch (key) {
-            case "getTime":
+            case "getTime" -> {
                 return (ProxyExecutable) arguments -> getTime();
-            case "toJSON":
-            case "toISOString":
+            }
+            case "toJSON", "toISOString" -> {
                 return (ProxyExecutable) arguments -> ISO8601Utils.format(this, true);
-            case "toString":
+            }
+            case "toString" -> {
                 // Currently defaulting to Date.toString, but could improve
                 return (ProxyExecutable) arguments -> toString();
-            default:
-                throw new UnsupportedOperationException("This date does not support: " + key);
+            }
+            default -> throw new UnsupportedOperationException("This date does not support: " + key);
         }
     }
 

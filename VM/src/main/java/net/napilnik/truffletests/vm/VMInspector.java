@@ -42,7 +42,7 @@ public class VMInspector implements AutoCloseable {
 
         builder.statements(true);
         builder.collectExceptions(true);
-        listener = builder.attach(contextProvider.getContext().getEngine());
+        listener = builder.attach(contextProvider.getPolyglotContext().getEngine());
     }
 
     @Override

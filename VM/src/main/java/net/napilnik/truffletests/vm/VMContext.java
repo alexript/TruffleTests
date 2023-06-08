@@ -17,7 +17,9 @@ package net.napilnik.truffletests.vm;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,13 +54,13 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private VMContext(VMLanguage lng, VMContext parent, boolean withInspection) {
-        super(lng, buildContext(lng), withInspection);
+        super(lng, buildContext(lng, parent), withInspection);
         childs = new ArrayList<>();
         this.parent = parent;
     }
 
-    private static Context buildContext(VMLanguage lng) {
-        return Context.newBuilder(lng.toPolyglot())
+    private static Context buildContext(VMLanguage lng, PolyglotContextProvider parent) {
+        Context ctx = Context.newBuilder(lng.toPolyglot())
                 .allowHostAccess(HostAccessProvider.HOST_ACCESS)
                 .allowCreateThread(true)
                 .allowValueSharing(true)
@@ -67,6 +69,24 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
                 .hostClassLoader(ClassLoader.getSystemClassLoader())
                 .build();
+        if (parent != null) {
+            copyBindings(lng, parent.getPolyglotContext(), ctx);
+        }
+        return ctx;
+    }
+
+    private static void copyBindings(VMLanguage lng, Context parentCtx, Context ctx) {
+        Value parentBindings = parentCtx.getBindings(lng.toPolyglot());
+        Value currentBindings = ctx.getBindings(lng.toPolyglot());
+        synchronized (currentBindings) {
+            synchronized (parentBindings) {
+                Set<String> parentMembers = new HashSet<>(parentBindings.getMemberKeys());
+                parentMembers.stream().forEach(
+                        id -> currentBindings.putMember(id, parentBindings.getMember(id))
+                );
+            }
+        }
+
     }
 
     protected VMContext create(boolean withInspection) {
@@ -110,7 +130,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     public void addObject(String identificator, Object object) {
-        synchronized (this.getContext()) {
+        synchronized (this.getPolyglotContext()) {
             Value bindings = this.getBindings();
             Object jsObject = prepareJSObject(object);
             bindings.putMember(identificator, jsObject);
@@ -185,7 +205,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         }
 
         try {
-            getContext().close();
+            getPolyglotContext().close();
         } catch (Exception ex) {
             throw new VMException(ex);
         }

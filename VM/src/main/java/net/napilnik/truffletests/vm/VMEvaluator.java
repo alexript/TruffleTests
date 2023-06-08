@@ -23,7 +23,7 @@ import org.graalvm.polyglot.Value;
  *
  * @author malyshev
  */
-class VMEvaluator implements PolyglotContextProvider {
+class VMEvaluator extends PolyglotContextProvider {
 
     private final Context ctx;
     private final VMLanguage lng;
@@ -36,7 +36,7 @@ class VMEvaluator implements PolyglotContextProvider {
     }
 
     @Override
-    public Context getContext() {
+    protected Context getPolyglotContext() {
         return ctx;
     }
 
@@ -133,7 +133,7 @@ class VMEvaluator implements PolyglotContextProvider {
     }
 
     private void evalImpl(VMScript script) {
-        synchronized (this.getContext()) {
+        synchronized (ctx) {
             try {
                 ctx.enter();
                 ctx.eval(script.getSource());
@@ -144,7 +144,7 @@ class VMEvaluator implements PolyglotContextProvider {
     }
 
     private <T> T evalImpl(VMScript script, Class<T> targetType) {
-        synchronized (this.getContext()) {
+        synchronized (ctx) {
             try {
                 ctx.enter();
                 Value value = ctx.eval(script.getSource());
@@ -156,8 +156,24 @@ class VMEvaluator implements PolyglotContextProvider {
         }
     }
 
+    public boolean hasFunction(String functionName) {
+        boolean result = false;
+        synchronized (ctx) {
+            try {
+                ctx.enter();
+                Value function = this.getBindings().getMember(functionName);
+                if (function != null && function.canExecute()) {
+                    result = true;
+                }
+            } finally {
+                ctx.leave();
+            }
+        }
+        return result;
+    }
+
     private <T> T evalImpl(String functionName, Class<T> targetType, Object... objArray) throws VMException {
-        synchronized (this.getContext()) {
+        synchronized (ctx) {
             try {
                 Value result = null;
                 ctx.enter();
@@ -195,7 +211,7 @@ class VMEvaluator implements PolyglotContextProvider {
     }
 
     private <T> T evalImpl(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
-        synchronized (this.getContext()) {
+        synchronized (ctx) {
             try {
                 Value result = null;
                 ctx.enter();

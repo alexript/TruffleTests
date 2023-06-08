@@ -21,7 +21,11 @@ import org.graalvm.polyglot.Context;
  *
  * @author malyshev
  */
-public interface PolyglotContextProvider {
+public abstract class PolyglotContextProvider {
 
-    Context getContext();
+    protected PolyglotContextProvider() {
+
+    }
+
+    abstract protected Context getPolyglotContext();
 }
