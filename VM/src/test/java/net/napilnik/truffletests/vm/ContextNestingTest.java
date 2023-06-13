@@ -27,6 +27,36 @@ import org.junit.jupiter.api.Test;
  */
 public class ContextNestingTest {
 
+    private static void executeNesting(String testName, Nesting outerNesting, Nesting innerNesting) throws VMException {
+        Date now = new Date();
+        System.out.println("-ts- Test: %1$s --------- <start: %2$tH:%2$tM:%2$tS> --------".formatted(testName, now));
+        try (VMContext context = VM.context("OuterContext", outerNesting)) {
+
+            long iterations = 10000;
+            StringBuilder sb = new StringBuilder();
+            for (long i = 0; i < iterations; i++) {
+                String fooName = "foo" + Long.toString(i);
+
+                String foo = "function %s(){return;}".formatted(fooName);
+                sb.append(foo).append('\n');
+
+            }
+            context.eval(new VMScript("foo.js", sb.toString()));
+
+            Date fullfill = new Date();
+            System.out.println("-ts- Test: %1$s -------------- <fullfill: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, fullfill, fullfill.getTime() - now.getTime()));
+
+            try (VMContext nestedContext = VM.context("NestedContext", context, innerNesting)) {
+
+            }
+
+            Date nested = new Date();
+            System.out.println("-ts- Test: %1$s -------------- <nested: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, nested, nested.getTime() - fullfill.getTime()));
+
+            System.out.println("-te- Test: %1$s --------- <end: %2$tH:%2$tM:%2$tS, len: %3$dms> --------\n".formatted(testName, now, nested.getTime() - now.getTime()));
+        }
+    }
+
     @Test
     public void testNaiveNesting() {
         try {
@@ -82,45 +112,6 @@ public class ContextNestingTest {
         }
     }
 
-    private static void executeNesting(String testName, Nesting outerNesting, Nesting innerNesting) throws VMException {
-        Date now = new Date();
-        System.out.println("-ts- Test: %1$s --------- <start: %2$tH:%2$tM:%2$tS> --------".formatted(testName, now));
-        try (VMContext context = VM.context("OuterContext", outerNesting)) {
-
-            long iterations = 10000;
-            StringBuilder sb = new StringBuilder();
-            for (long i = 0; i < iterations; i++) {
-                String fooName = "foo" + Long.toString(i);
-
-                String foo = "function %s(){return;}".formatted(fooName);
-                sb.append(foo).append('\n');
-
-            }
-            context.eval(new VMScript("foo.js", sb.toString()));
-
-            Date fullfill = new Date();
-            System.out.println("-ts- Test: %1$s -------------- <fullfill: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, fullfill, fullfill.getTime() - now.getTime()));
-
-            try (VMContext nestedContext = VM.context("NestedContext", context, innerNesting)) {
-
-            }
-
-            Date nested = new Date();
-            System.out.println("-ts- Test: %1$s -------------- <nested: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, nested, nested.getTime() - fullfill.getTime()));
-
-            System.out.println("-te- Test: %1$s --------- <end: %2$tH:%2$tM:%2$tS, len: %3$dms> --------\n".formatted(testName, now, nested.getTime() - now.getTime()));
-        }
-    }
-
-    @Test
-    public void testNaivePerfomance() {
-        try {
-            executeNesting("testNaivePerfomance", Nesting.None, Nesting.Naive);
-        } catch (VMException ex) {
-            fail(ex);
-        }
-    }
-
     @Test
     public void testCacheNesting() {
         try {
@@ -147,6 +138,44 @@ public class ContextNestingTest {
                     Assertions.assertEquals(42, resultNested);
                 }
             }
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
+    public void testCacheConstantsNesting() {
+        try {
+            VMScript script = new VMScript("testCacheConstantsNesting.js",
+                    """
+                        const answer = 42;
+                    """);
+
+            VMScript scriptNested = new VMScript("testCacheConstantsNestingInner.js",
+                    """
+                        function getAnswer() {
+                             return answer;
+                        }
+                    """);
+
+            try (VMContext context = VM.context("OuterContext", Nesting.Naive)) {
+                context.eval(script);
+                try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
+                    nestedContext.eval(scriptNested);
+
+                    Integer resultNested = nestedContext.eval("getAnswer", Integer.class);
+                    Assertions.assertEquals(42, resultNested);
+                }
+            }
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
+    public void testNaivePerfomance() {
+        try {
+            executeNesting("testNaivePerfomance", Nesting.None, Nesting.Naive);
         } catch (VMException ex) {
             fail(ex);
         }
