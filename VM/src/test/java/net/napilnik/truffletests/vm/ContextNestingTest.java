@@ -195,6 +195,9 @@ public class ContextNestingTest {
 
                     Integer resultNested = nestedContext.eval("getAnswer", Integer.class);
                     Assertions.assertEquals(43, resultNested);
+
+                    resultNested = nestedContext.eval("getAnswer", Integer.class);
+                    Assertions.assertEquals(44, resultNested);
                 }
 
                 try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
@@ -211,7 +214,7 @@ public class ContextNestingTest {
                     Assertions.assertEquals(42, result);
                 }
 
-                context.eval(new VMScript("directaccess.js", """
+                context.eval(new VMScript("directaccess2.js", """
                         function getOuterAnswer2() {
                             return answer;
                         }
