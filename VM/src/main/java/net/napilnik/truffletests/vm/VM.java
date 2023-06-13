@@ -31,28 +31,28 @@ public class VM {
         return inspectedEvaluation;
     }
 
-    public static VMContext context() {
-        return context((String) null);
+    public static VMContext context(Nesting nestingMode) {
+        return context((String) null, nestingMode);
     }
 
-    public static VMContext context(String contextName) {
-        return context(contextName, inspectedEvaluation);
+    public static VMContext context(String contextName, Nesting nestingMode) {
+        return context(contextName, nestingMode, inspectedEvaluation);
     }
 
-    protected static VMContext context(String contextName, boolean withInspection) {
-        return context(contextName, VMContext.GLOBALCONTEXT, withInspection);
+    protected static VMContext context(String contextName, Nesting nestingMode, boolean withInspection) {
+        return context(contextName, VMContext.GLOBALCONTEXT, nestingMode, withInspection);
     }
 
-    public static VMContext context(VMContext parentContext) {
-        return context((String) null, parentContext);
+    public static VMContext context(VMContext parentContext, Nesting nestingMode) {
+        return context((String) null, parentContext, nestingMode);
     }
 
-    public static VMContext context(String contextName, VMContext parentContext) {
-        return context(contextName, parentContext, inspectedEvaluation);
+    public static VMContext context(String contextName, VMContext parentContext, Nesting nestingMode) {
+        return context(contextName, parentContext, nestingMode, inspectedEvaluation);
     }
 
-    protected static VMContext context(String contextName, VMContext parentContext, boolean withInspection) {
-        VMContext instance = parentContext.create(contextName, withInspection);
+    protected static VMContext context(String contextName, VMContext parentContext, Nesting nestingMode, boolean withInspection) {
+        VMContext instance = parentContext.create(contextName, nestingMode, withInspection);
         prepareInstance(instance);
         return instance;
     }

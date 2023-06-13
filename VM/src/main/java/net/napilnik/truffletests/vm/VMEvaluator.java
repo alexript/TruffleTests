@@ -28,9 +28,13 @@ class VMEvaluator extends PolyglotContextProvider {
     private final Context ctx;
     private final VMLanguage lng;
     private final boolean useInspector;
+    private final Nesting nestingMode;
+    private final VMEvaluator parent;
 
-    public VMEvaluator(VMLanguage lng, Context ctx, boolean withInspection) {
+    public VMEvaluator(VMLanguage lng, Context ctx, VMEvaluator parent, Nesting nestingMode, boolean withInspection) {
         this.ctx = ctx;
+        this.parent = parent;
+        this.nestingMode = nestingMode;
         this.lng = lng;
         this.useInspector = withInspection;
     }
@@ -165,6 +169,7 @@ class VMEvaluator extends PolyglotContextProvider {
                 if (function != null && function.canExecute()) {
                     result = true;
                 }
+
             } finally {
                 ctx.leave();
             }
@@ -204,6 +209,7 @@ class VMEvaluator extends PolyglotContextProvider {
                     return null;
                 }
                 return result.as(targetType);
+
             } finally {
                 ctx.leave();
             }
@@ -215,11 +221,13 @@ class VMEvaluator extends PolyglotContextProvider {
             try {
                 Value result = null;
                 ctx.enter();
-                Value function;
+                Value function = null;
 
                 try {
                     Value member = this.getBindings().getMember(objectName);
-                    function = member.getMember(fieldName);
+                    if (member != null) {
+                        function = member.getMember(fieldName);
+                    }
                 } catch (PolyglotException ex) {
                     throw new VMException(ex);
                 }
@@ -243,6 +251,7 @@ class VMEvaluator extends PolyglotContextProvider {
                     return null;
                 }
                 return result.as(targetType);
+
             } finally {
                 ctx.leave();
             }

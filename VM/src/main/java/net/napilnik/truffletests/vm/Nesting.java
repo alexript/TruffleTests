@@ -15,26 +15,12 @@
  */
 package net.napilnik.truffletests.vm;
 
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  *
  * @author malyshev
  */
-public class VMSimplestTest {
-
-    @Test
-    public void testSimplestUse() {
-        try {
-            VMScript script = new VMScript("testSimplestUse.js", "let answer = 42;");
-            VMContext context = VM.context(Nesting.None);
-            try (context) {
-                context.eval(script);
-            }
-        } catch (VMException ex) {
-            fail(ex);
-        }
-    }
-
+public enum Nesting {
+    None,
+    Naive,
+    Cache
 }

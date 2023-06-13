@@ -45,7 +45,9 @@ public class VMScript {
     public VMScript(String scriptFileName, String scriptFileBody) throws VMException {
         this.lng = getLanguageFor(scriptFileName);
         try {
-            source = Source.newBuilder(lng.toPolyglot(), scriptFileBody, scriptFileName).build();
+            source = Source.newBuilder(lng.toPolyglot(), scriptFileBody, scriptFileName)
+                    .cached(true)
+                    .build();
         } catch (IOException ex) {
             throw new VMException(ex);
         }

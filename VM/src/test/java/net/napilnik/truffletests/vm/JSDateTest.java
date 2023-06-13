@@ -37,7 +37,7 @@ public class JSDateTest {
     public void testJsDate() {
         try {
             VMScript script = new VMScript("jsDateTest.js", "function getDate() {return new Date();}");
-            VMContext context = VM.context();
+            VMContext context = VM.context(Nesting.None);
             try (context) {
                 context.eval(script);
                 Value result = context.eval("getDate", Value.class);
@@ -52,7 +52,7 @@ public class JSDateTest {
     public void testJsDateObject() {
         try {
             VMScript script = new VMScript("testJsDateObject.js", "function getDate() {return new Date();}");
-            VMContext context = VM.context();
+            VMContext context = VM.context(Nesting.None);
             try (context) {
 
                 context.eval(script);
@@ -86,7 +86,7 @@ public class JSDateTest {
                 @Override
 
                 public void run() {
-                    target.stdContext = VM.context();
+                    target.stdContext = VM.context(Nesting.None);
                     try {
                         VMStdLib.apply(target.stdContext);
                     } catch (VMException ex) {
@@ -122,7 +122,7 @@ public class JSDateTest {
                 public void run() {
                     try {
                         VMScript script = new VMScript("testJavaToJsDateObject.js", "function getDate(jsDate) {return jsDate;}");
-                        VMContext context = VM.context();
+                        VMContext context = VM.context(Nesting.None);
                         try (context) {
                             Value jsDate = VMStdLib.javaDateToJSDate(stdContextHolder.stdContext, now);
                             context.eval(script);
@@ -156,7 +156,7 @@ public class JSDateTest {
                 public void run() {
                     try {
                         VMScript script = new VMScript("testValueReuse.js", "function getDate(jsDate) {return jsDate;}");
-                        VMContext context = VM.context();
+                        VMContext context = VM.context(Nesting.None);
                         try (context) {
                             context.eval(script);
                             Value result = context.eval("getDate", Value.class, r.result);
@@ -187,7 +187,7 @@ public class JSDateTest {
         try {
             VMScript script = new VMScript("testDateOverride.js", "function getDate() {return new Date();}");
             VMScript scriptJson = new VMScript("getDateAsJson.js", "function getDateAsJson() {let d= new Date(); return d.toJSON();}");
-            VMContext context = VM.context();
+            VMContext context = VM.context(Nesting.None);
             try (context) {
                 context.addClass(DateOverride.class);
                 context.eval(script);
@@ -219,7 +219,7 @@ public class JSDateTest {
 
         try {
             VMScript script = new VMScript("testDateOverride2.js", "function getDate() {return new Date();}");
-            VMContext context = VM.context();
+            VMContext context = VM.context(Nesting.None);
             try (context) {
                 context.addClass(DateOverride2.class);
                 context.eval(script);

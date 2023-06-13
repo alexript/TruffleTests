@@ -24,7 +24,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.EnvironmentAccess;
+import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
 /**
@@ -36,11 +38,11 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     private final List<VMContext> childs;
     private final VMContext parent;
     private final String contextName;
-
+    private final Nesting nesting;
     protected static final VMContext GLOBALCONTEXT = constructGlobalContext();
 
     private static VMContext constructGlobalContext() {
-        VMContext vmContext = new VMContext("<RootContext>", VMLanguage.JS, null, false);
+        VMContext vmContext = new VMContext("<RootContext>", VMLanguage.JS, null, Nesting.None, false);
         GlobalBindings.bind(vmContext);
         try {
             VMStdLib.apply(vmContext);
@@ -50,12 +52,13 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         return vmContext;
     }
 
-    private VMContext(String contextName, VMContext parent, boolean withInspection) {
-        this(contextName, VMLanguage.JS, parent, withInspection);
+    private VMContext(String contextName, VMContext parent, Nesting nestingMode, boolean withInspection) {
+        this(contextName, VMLanguage.JS, parent, nestingMode, withInspection);
     }
 
-    private VMContext(String contextName, VMLanguage lng, VMContext parent, boolean withInspection) {
-        super(lng, buildContext(lng, parent), withInspection);
+    private VMContext(String contextName, VMLanguage lng, VMContext parent, Nesting nestingMode, boolean withInspection) {
+        super(lng, buildContext(lng, parent, nestingMode), parent, nestingMode, withInspection);
+        this.nesting = nestingMode;
         childs = new ArrayList<>();
         this.parent = parent;
         this.contextName = contextName;
@@ -65,20 +68,40 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         return contextName;
     }
 
-    private static Context buildContext(VMLanguage lng, PolyglotContextProvider parent) {
-        Context ctx = Context.newBuilder(lng.toPolyglot())
+    private static Context buildContext(VMLanguage lng, PolyglotContextProvider parent, Nesting nestingMode) {
+        Context.Builder builderTemplate = Context.newBuilder(lng.toPolyglot())
                 .allowHostAccess(HostAccessProvider.HOST_ACCESS)
                 .allowCreateThread(true)
                 .allowValueSharing(true)
                 .allowExperimentalOptions(true)
                 .allowInnerContextOptions(true)
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
-                .hostClassLoader(ClassLoader.getSystemClassLoader())
+                .hostClassLoader(ClassLoader.getSystemClassLoader());
+        if (parent == null || nestingMode == Nesting.Naive) {
+            Engine engine = Engine.newBuilder().build();
+            builderTemplate.engine(engine);
+        }
+        if (parent != null && nestingMode != Nesting.Naive && nestingMode != Nesting.None) {
+            builderTemplate.engine(parent.getPolyglotContext().getEngine());
+        }
+        Context ctx = builderTemplate
                 .build();
         if (parent != null) {
-            copyBindings(lng, parent.getPolyglotContext(), ctx);
+            if (nestingMode == Nesting.Naive) {
+                copyBindings(lng, parent.getPolyglotContext(), ctx);
+            } else if (nestingMode == Nesting.Cache) {
+                recacheBingdings(parent.getPolyglotContext(), ctx);
+            }
         }
         return ctx;
+    }
+
+    private static void recacheBingdings(Context parentCtx, Context ctx) {
+        Set<Source> cachedSources = parentCtx.getEngine().getCachedSources();
+
+        for (Source s : cachedSources) {
+            ctx.eval(s);
+        }
     }
 
     private static void copyBindings(VMLanguage lng, Context parentCtx, Context ctx) {
@@ -95,12 +118,12 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
 
     }
 
-    protected VMContext create(String contextName, boolean withInspection) {
-        return new VMContext(contextName, this, withInspection);
+    protected VMContext create(String contextName, Nesting nestingMode, boolean withInspection) {
+        return new VMContext(contextName, this, nestingMode, withInspection);
     }
 
-    protected VMContext create(String contextName, VMLanguage lng, boolean withInspection) {
-        return new VMContext(contextName, lng, this, withInspection);
+    protected VMContext create(String contextName, VMLanguage lng, Nesting nestingMode, boolean withInspection) {
+        return new VMContext(contextName, lng, this, nestingMode, withInspection);
     }
 
     public void addClass(Class someClass) {
