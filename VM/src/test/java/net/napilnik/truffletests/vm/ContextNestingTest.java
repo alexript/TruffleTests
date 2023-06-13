@@ -173,6 +173,58 @@ public class ContextNestingTest {
     }
 
     @Test
+    public void testContextAsScope() {
+        try {
+            VMScript script = new VMScript("testContextAsScope.js",
+                    """
+                        var answer = 42;
+                    """);
+
+            VMScript scriptNested = new VMScript("testContextAsScope2.js",
+                    """
+                        function getAnswer() {
+                            answer = answer+1;
+                            return answer;
+                        }
+                    """);
+
+            try (VMContext context = VM.context("OuterContext", Nesting.Naive)) {
+                context.eval(script);
+                try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
+                    nestedContext.eval(scriptNested);
+
+                    Integer resultNested = nestedContext.eval("getAnswer", Integer.class);
+                    Assertions.assertEquals(43, resultNested);
+                }
+
+                try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
+                    nestedContext.eval(scriptNested);
+                    Integer resultNested = nestedContext.eval("getAnswer", Integer.class);
+                    Assertions.assertEquals(43, resultNested);
+
+                    context.eval(new VMScript("directaccess.js", """
+                        function getOuterAnswer() {
+                            return answer;
+                        }
+                    """));
+                    Integer result = context.eval("getOuterAnswer", Integer.class);
+                    Assertions.assertEquals(42, result);
+                }
+
+                context.eval(new VMScript("directaccess.js", """
+                        function getOuterAnswer2() {
+                            return answer;
+                        }
+                """));
+                Integer result = context.eval("getOuterAnswer2", Integer.class);
+                Assertions.assertEquals(42, result);
+            }
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
     public void testNaivePerfomance() {
         try {
             executeNesting("testNaivePerfomance", Nesting.None, Nesting.Naive);
