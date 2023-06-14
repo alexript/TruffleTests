@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.inspection;
 
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.management.ExecutionEvent;

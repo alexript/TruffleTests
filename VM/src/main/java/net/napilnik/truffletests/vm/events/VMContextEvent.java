@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.events;
 
-import net.napilnik.truffletests.vm.nesting.Nesting;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.EventObject;
+import net.napilnik.truffletests.vm.VMContext;
 
 /**
  *
  * @author malyshev
+ * @param <SOURCE>
  */
-public class VMSimplestTest {
+public class VMContextEvent<SOURCE> extends EventObject {
 
-    @Test
-    public void testSimplestUse() {
-        try {
-            VMScript script = new VMScript("testSimplestUse.js", "let answer = 42;");
-            VMContext context = VM.context(Nesting.None);
-            try (context) {
-                context.eval(script);
-            }
-        } catch (VMException ex) {
-            fail(ex);
-        }
+    private static final long serialVersionUID = 7499445933683474877L;
+    private final VMContextEventType type;
+
+    public VMContextEvent(SOURCE source, VMContextEventType eventType) {
+        super(source);
+        this.type = eventType;
+    }
+
+    public final VMContextEventType getType() {
+        return type;
+    }
+
+    @Override
+    public final SOURCE getSource() {
+        return (SOURCE) super.getSource();
     }
 
 }

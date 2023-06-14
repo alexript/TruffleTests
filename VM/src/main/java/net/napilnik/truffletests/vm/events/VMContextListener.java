@@ -13,29 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.events;
 
-import net.napilnik.truffletests.vm.nesting.Nesting;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.EventListener;
 
 /**
  *
  * @author malyshev
  */
-public class VMSimplestTest {
+public interface VMContextListener extends EventListener {
 
-    @Test
-    public void testSimplestUse() {
-        try {
-            VMScript script = new VMScript("testSimplestUse.js", "let answer = 42;");
-            VMContext context = VM.context(Nesting.None);
-            try (context) {
-                context.eval(script);
-            }
-        } catch (VMException ex) {
-            fail(ex);
-        }
-    }
+    void onEvent(VMContextEvent event);
 
 }

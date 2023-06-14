@@ -15,6 +15,7 @@
  */
 package net.napilnik.truffletests.vm;
 
+import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.util.Date;
 import net.napilnik.truffletests.objects.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -230,7 +231,7 @@ public class ContextNestingTest {
     @Test
     public void testNaivePerfomance() {
         try {
-            executeNesting("testNaivePerfomance", Nesting.None, Nesting.Naive);
+            executeNesting("testNaivePerfomance", Nesting.Naive, Nesting.Naive);
         } catch (VMException ex) {
             fail(ex);
         }

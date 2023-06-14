@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.nesting;
+
+import net.napilnik.truffletests.vm.VMLanguage;
+import org.graalvm.polyglot.Context;
 
 /**
  *
  * @author malyshev
  */
-public enum Nesting {
-    None,
-    Naive,
-    Cache
+class NoneListener implements VMContextNestingListener {
+
+    @Override
+    public void onNesting(VMLanguage language, Context parentContext, Context ctx, Nesting nesting) {
+        if (nesting == Nesting.None) {
+            // do nesting
+        }
+    }
+
 }

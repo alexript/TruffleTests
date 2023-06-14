@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.nesting;
 
-import net.napilnik.truffletests.vm.nesting.Nesting;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Set;
+import net.napilnik.truffletests.vm.VMLanguage;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Source;
 
 /**
  *
  * @author malyshev
  */
-public class VMSimplestTest {
+class CacheListener implements VMContextNestingListener {
 
-    @Test
-    public void testSimplestUse() {
-        try {
-            VMScript script = new VMScript("testSimplestUse.js", "let answer = 42;");
-            VMContext context = VM.context(Nesting.None);
-            try (context) {
-                context.eval(script);
+    @Override
+    public void onNesting(VMLanguage language, Context parentContext, Context ctx, Nesting nesting) {
+        if (nesting == Nesting.Cache) {
+            synchronized (parentContext) {
+                Set<Source> cachedSources = parentContext.getEngine().getCachedSources();
+                for (Source s : cachedSources) {
+                    ctx.eval(s);
+                }
             }
-        } catch (VMException ex) {
-            fail(ex);
         }
     }
 

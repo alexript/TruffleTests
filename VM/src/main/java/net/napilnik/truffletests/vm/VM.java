@@ -15,6 +15,12 @@
  */
 package net.napilnik.truffletests.vm;
 
+import net.napilnik.truffletests.vm.nesting.Nesting;
+import net.napilnik.truffletests.vm.events.VMContextEvent;
+import net.napilnik.truffletests.vm.events.VMContextEventEmitter;
+import net.napilnik.truffletests.vm.events.VMContextEventType;
+import net.napilnik.truffletests.vm.events.VMContextListener;
+
 /**
  *
  * @author malyshev
@@ -22,6 +28,20 @@ package net.napilnik.truffletests.vm;
 public class VM {
 
     private static boolean inspectedEvaluation = true;
+
+    private static final VMContextEventEmitter contextEventEmitter = createContextEventEmitter();
+
+    private static VMContextEventEmitter createContextEventEmitter() {
+        VMContextEventEmitter emitter = new VMContextEventEmitter();
+        for (Nesting n : Nesting.values()) {
+            emitter.addContextListener(n.createNestingListener());
+        }
+        return emitter;
+    }
+
+    protected static VMContextEventEmitter getContextEventEmitter() {
+        return contextEventEmitter;
+    }
 
     public static void setInspectableEvaluation(boolean doInspectation) {
         inspectedEvaluation = doInspectation;
@@ -58,7 +78,19 @@ public class VM {
     }
 
     private static void prepareInstance(VMContext instance) {
-
+        VMContextEvent<VMContext> event = new VMContextEvent<>(instance, VMContextEventType.ContextPrepared);
+        getContextEventEmitter().emitEvent(event);
     }
 
+    protected static void clearContextListeners() {
+        getContextEventEmitter().clearContextListeners();
+    }
+
+    protected static void addContextListener(VMContextListener listener) {
+        getContextEventEmitter().addContextListener(listener);
+    }
+
+    protected static void removeContextListener(VMContextListener listener) {
+        getContextEventEmitter().removeContextListener(listener);
+    }
 }

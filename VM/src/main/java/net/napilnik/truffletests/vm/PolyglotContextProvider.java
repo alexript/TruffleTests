@@ -27,5 +27,5 @@ public abstract class PolyglotContextProvider {
 
     }
 
-    abstract protected Context getPolyglotContext();
+    abstract public Context getPolyglotContext();
 }

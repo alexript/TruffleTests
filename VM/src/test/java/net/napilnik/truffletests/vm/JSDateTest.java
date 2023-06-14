@@ -15,6 +15,7 @@
  */
 package net.napilnik.truffletests.vm;
 
+import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
