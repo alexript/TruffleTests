@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.napilnik.truffletests.vm.javabridge.BridgeEvent;
+import net.napilnik.truffletests.vm.javabridge.BridgeListener;
 import net.napilnik.truffletests.vm.nesting.VMContextNestingEvent;
 import net.napilnik.truffletests.vm.nesting.VMContextNestingListener;
 
@@ -38,12 +40,17 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     private final List<VMContext> childs;
     private final VMContext parent;
     private final String contextName;
-    private final Nesting nesting;
     protected static final VMContext GLOBALCONTEXT = constructGlobalContext();
 
     private static VMContext constructGlobalContext() {
-        VMContext vmContext = new VMContext("<RootContext>", VMLanguage.JS, null, Nesting.None, false);
-        GlobalBindings.bind(vmContext);
+        return constructGlobalContext("");
+    }
+
+    private static VMContext constructGlobalContext(String contextName) {
+        VMContext vmContext = new VMContext("<RootContext" + contextName + ">", VMLanguage.JS, null, Nesting.None, false);
+        BridgeEvent event = new BridgeEvent(vmContext, Nesting.None);
+        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+
         try {
             VMStdLib.apply(vmContext);
         } catch (VMException ex) {
@@ -57,13 +64,13 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private VMContext(String contextName, VMLanguage lng, VMContext parent, Nesting nestingMode, boolean withInspection) {
-        super(lng, buildContext(lng, parent, nestingMode), parent, nestingMode, withInspection);
-        this.nesting = nestingMode;
+        super(lng, buildContext(lng, parent, nestingMode), withInspection);
         childs = new ArrayList<>();
         this.parent = parent;
         this.contextName = contextName;
     }
 
+    @Override
     public String getName() {
         return contextName;
     }
@@ -77,15 +84,26 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .allowInnerContextOptions(true)
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
                 .hostClassLoader(ClassLoader.getSystemClassLoader());
-        if (parent == null || nestingMode == Nesting.Naive) {
+
+//        System.out.println("%s -> %s".formatted(((parent == null) ? "null" : parent.toString()), nestingMode.name()));
+        if (parent == null) {
             Engine engine = Engine.newBuilder().build();
             builderTemplate.engine(engine);
+        } else {
+            if (parent == GLOBALCONTEXT) {
+                Engine engine = Engine.newBuilder().build();
+                builderTemplate.engine(engine);
+            } else {
+                if (nestingMode != Nesting.Cache) {
+                    Engine engine = Engine.newBuilder().build();
+                    builderTemplate.engine(engine);
+
+                } else {
+                    builderTemplate.engine(parent.getPolyglotContext().getEngine());
+                }
+            }
         }
-        if (parent != null && nestingMode != Nesting.Naive && nestingMode != Nesting.None) {
-            builderTemplate.engine(parent.getPolyglotContext().getEngine());
-        }
-        Context ctx = builderTemplate
-                .build();
+        Context ctx = builderTemplate.build();
         if (parent != null) {
             VMContextNestingEvent event = new VMContextNestingEvent(lng, parent.getPolyglotContext(), ctx, nestingMode);
             VM.getContextEventEmitter().emitEvent(event, VMContextNestingListener.class);
@@ -94,11 +112,17 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     protected VMContext create(String contextName, Nesting nestingMode, boolean withInspection) {
-        return new VMContext(contextName, this, nestingMode, withInspection);
+        VMContext ctx = new VMContext(contextName, this, nestingMode, withInspection);
+        BridgeEvent event = new BridgeEvent(ctx, nestingMode);
+        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        return ctx;
     }
 
     protected VMContext create(String contextName, VMLanguage lng, Nesting nestingMode, boolean withInspection) {
-        return new VMContext(contextName, lng, this, nestingMode, withInspection);
+        VMContext ctx = new VMContext(contextName, lng, this, nestingMode, withInspection);
+        BridgeEvent event = new BridgeEvent(ctx, nestingMode);
+        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        return ctx;
     }
 
     public void addClass(Class someClass) {

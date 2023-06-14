@@ -19,6 +19,7 @@ import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.util.Date;
 import net.napilnik.truffletests.objects.Pair;
 import org.junit.jupiter.api.Assertions;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 
@@ -130,7 +131,7 @@ public class ContextNestingTest {
                         }
                     """);
 
-            try (VMContext context = VM.context("OuterContext", Nesting.Naive)) {
+            try (VMContext context = VM.context("OuterContext", Nesting.None)) {
                 context.eval(script);
                 try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
                     nestedContext.eval(scriptNested);
@@ -159,7 +160,7 @@ public class ContextNestingTest {
                         }
                     """);
 
-            try (VMContext context = VM.context("OuterContext", Nesting.Naive)) {
+            try (VMContext context = VM.context("OuterContext", Nesting.None)) {
                 context.eval(script);
                 try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
                     nestedContext.eval(scriptNested);
@@ -189,7 +190,7 @@ public class ContextNestingTest {
                         }
                     """);
 
-            try (VMContext context = VM.context("OuterContext", Nesting.Naive)) {
+            try (VMContext context = VM.context("OuterContext", Nesting.None)) {
                 context.eval(script);
                 try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
                     nestedContext.eval(scriptNested);
@@ -235,6 +236,7 @@ public class ContextNestingTest {
         } catch (VMException ex) {
             fail(ex);
         }
+        assertTrue(true);
     }
 
     @Test
@@ -244,5 +246,6 @@ public class ContextNestingTest {
         } catch (VMException ex) {
             fail(ex);
         }
+        assertTrue(true);
     }
 }

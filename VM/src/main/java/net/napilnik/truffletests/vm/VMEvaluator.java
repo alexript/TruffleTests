@@ -26,18 +26,14 @@ import org.graalvm.polyglot.Value;
  *
  * @author malyshev
  */
-class VMEvaluator extends PolyglotContextProvider {
+abstract class VMEvaluator extends PolyglotContextProvider {
 
     private final Context ctx;
     private final VMLanguage lng;
     private final boolean useInspector;
-    private final Nesting nestingMode;
-    private final VMEvaluator parent;
 
-    public VMEvaluator(VMLanguage lng, Context ctx, VMEvaluator parent, Nesting nestingMode, boolean withInspection) {
+    public VMEvaluator(VMLanguage lng, Context ctx, boolean withInspection) {
         this.ctx = ctx;
-        this.parent = parent;
-        this.nestingMode = nestingMode;
         this.lng = lng;
         this.useInspector = withInspection;
     }

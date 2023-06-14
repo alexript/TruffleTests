@@ -20,6 +20,7 @@ package net.napilnik.truffletests.vm.events;
  * @author malyshev
  */
 public enum VMContextEventType {
+    Bridging,
     Nesting,
     ContextPrepared;
 }

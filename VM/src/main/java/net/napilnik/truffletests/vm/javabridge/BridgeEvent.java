@@ -13,28 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.javabridge;
 
-import org.graalvm.polyglot.Context;
+import net.napilnik.truffletests.vm.VMContext;
+import net.napilnik.truffletests.vm.events.VMContextEvent;
+import net.napilnik.truffletests.vm.events.VMContextEventType;
+import net.napilnik.truffletests.vm.nesting.Nesting;
 
 /**
  *
  * @author malyshev
  */
-public abstract class PolyglotContextProvider {
+public class BridgeEvent extends VMContextEvent<VMContext> {
 
-    protected PolyglotContextProvider() {
+    private static final long serialVersionUID = -5503844283027739257L;
+    private final Nesting nesting;
 
+    public BridgeEvent(VMContext source, Nesting nesting) {
+        super(source, VMContextEventType.Bridging);
+        this.nesting = nesting;
     }
 
-    abstract protected String getName();
-
-    abstract public Context getPolyglotContext();
-
-    @Override
-    public String toString() {
-        return "PolyglotContextProvider: %s".formatted(getName());
+    public final Nesting getNesting() {
+        return nesting;
     }
-
 
 }

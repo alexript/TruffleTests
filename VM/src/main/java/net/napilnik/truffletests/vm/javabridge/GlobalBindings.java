@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.javabridge;
 
 import net.napilnik.truffletests.objects.DateOverride;
 import net.napilnik.truffletests.objects.Pair;
+import net.napilnik.truffletests.vm.VMContext;
 
 /**
  *

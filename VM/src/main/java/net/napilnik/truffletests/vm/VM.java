@@ -20,6 +20,7 @@ import net.napilnik.truffletests.vm.events.VMContextEvent;
 import net.napilnik.truffletests.vm.events.VMContextEventEmitter;
 import net.napilnik.truffletests.vm.events.VMContextEventType;
 import net.napilnik.truffletests.vm.events.VMContextListener;
+import net.napilnik.truffletests.vm.javabridge.BridgeListener;
 
 /**
  *
@@ -33,6 +34,7 @@ public class VM {
 
     private static VMContextEventEmitter createContextEventEmitter() {
         VMContextEventEmitter emitter = new VMContextEventEmitter();
+        emitter.addContextListener(new BridgeListener());
         for (Nesting n : Nesting.values()) {
             emitter.addContextListener(n.createNestingListener());
         }
@@ -49,6 +51,10 @@ public class VM {
 
     public static boolean isInspectableEvaluation() {
         return inspectedEvaluation;
+    }
+
+    public static VMContext context() {
+        return context(Nesting.None);
     }
 
     public static VMContext context(Nesting nestingMode) {
@@ -72,7 +78,8 @@ public class VM {
     }
 
     protected static VMContext context(String contextName, VMContext parentContext, Nesting nestingMode, boolean withInspection) {
-        VMContext instance = parentContext.create(contextName, nestingMode, withInspection);
+        Nesting nest = nestingMode == Nesting.None ? Nesting.Naive : nestingMode;
+        VMContext instance = parentContext.create(contextName, nest, withInspection);
         prepareInstance(instance);
         return instance;
     }
