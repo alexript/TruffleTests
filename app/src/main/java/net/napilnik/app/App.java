@@ -16,7 +16,9 @@
 package net.napilnik.app;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -33,12 +35,14 @@ public class App implements Serializable {
     private String title;
     private App superApp;
     private Set<App> dependencies;
+    private Map<String, String> appScripts;
 
     public App(String mnemo, String title) {
         this(ROOT, mnemo, title);
     }
 
     private App(App superApp, String mnemo, String title) {
+        this.appScripts = new HashMap<>();
         this.superApp = superApp;
         this.dependencies = new HashSet<>();
         this.title = title;
@@ -79,6 +83,14 @@ public class App implements Serializable {
 
     public void removeDependency(App dep) {
         dependencies.remove(dep);
+    }
+
+    public Map<String, String> getScripts() {
+        return appScripts;
+    }
+
+    public void addScript(String scriptName, String scriptBody) {
+        appScripts.put(scriptName, scriptBody);
     }
 
     @Override

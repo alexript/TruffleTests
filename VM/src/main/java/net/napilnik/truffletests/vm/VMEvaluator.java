@@ -25,7 +25,7 @@ import org.graalvm.polyglot.Value;
  *
  * @author malyshev
  */
-abstract class VMEvaluator extends PolyglotContextProvider {
+abstract class VMEvaluator extends PolyglotContextProvider implements Evaluator {
 
     private final Context ctx;
     private final VMLanguage lng;
@@ -52,18 +52,22 @@ abstract class VMEvaluator extends PolyglotContextProvider {
         throw new VMException(functionName, enterListener.getLineNumber(), enterListener.getColumnNumber(), enterListener.getLine(), x.getMessage(), "");
     }
 
+    @Override
     public void eval(String functionName) throws VMException {
         eval(functionName, new Object[0]);
     }
 
+    @Override
     public <T> T eval(String functionName, Class<T> targetType) throws VMException {
         return eval(functionName, targetType, new Object[0]);
     }
 
+    @Override
     public void eval(String functionName, Object... objArray) throws VMException {
         eval(functionName, Void.class, objArray);
     }
 
+    @Override
     public <T> T eval(String functionName, Class<T> targetType, Object... objArray) throws VMException {
         if (!useInspector) {
             return evalImpl(functionName, targetType, objArray);
@@ -82,6 +86,7 @@ abstract class VMEvaluator extends PolyglotContextProvider {
 
     }
 
+    @Override
     public <T> T eval(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
         if (!useInspector) {
             return evalImpl(objectName, fieldName, targetType, objArray);
@@ -100,6 +105,7 @@ abstract class VMEvaluator extends PolyglotContextProvider {
 
     }
 
+    @Override
     public void eval(VMScript script) throws VMException {
         if (!useInspector) {
             evalImpl(script);
@@ -117,6 +123,7 @@ abstract class VMEvaluator extends PolyglotContextProvider {
         }
     }
 
+    @Override
     public <T> T eval(VMScript script, Class<T> targetType) throws VMException {
         if (!useInspector) {
             return evalImpl(script, targetType);
@@ -158,6 +165,7 @@ abstract class VMEvaluator extends PolyglotContextProvider {
         }
     }
 
+    @Override
     public boolean hasFunction(String functionName) {
         boolean result = false;
         synchronized (ctx) {
