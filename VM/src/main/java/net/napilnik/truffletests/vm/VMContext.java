@@ -118,7 +118,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .hostClassLoader(VM.class.getClassLoader());
 
         Engine engine;
-        if (parent == null || parent == VMRootContextsContainer.GLOBALCONTEXT) {
+        if (parent == null) {
             engine = Engine.newBuilder().build();
         } else {
             if (nestingMode == Nesting.Cache) {

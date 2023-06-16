@@ -48,9 +48,10 @@ public class NestingPerformanceTest {
     }
 
     private static void executeNesting(String testName, Nesting outerNesting, Nesting innerNesting) throws VMException {
+        VMContext root = VM.root(testName);
         Date now = new Date();
         System.out.println("-ts- Test: %1$s --------- <start: %2$tH:%2$tM:%2$tS> --------".formatted(testName, now));
-        try (VMContext context = VM.context("OuterContext", outerNesting)) {
+        try (VMContext context = VM.context("OuterContext", root, outerNesting)) {
             context.eval(testScript);
 
             Date fullfill = new Date();
