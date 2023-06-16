@@ -28,19 +28,24 @@ import org.graalvm.polyglot.Value;
 class NaiveListener implements VMContextNestingListener {
 
     @Override
-    public void onNesting(VMLanguage language, Context parentContext, Context ctx, Nesting nesting) {
-        if (nesting == Nesting.Naive) {
-            Value parentBindings = parentContext.getBindings(language.toPolyglot());
-            Value currentBindings = ctx.getBindings(language.toPolyglot());
-            synchronized (currentBindings) {
-                synchronized (parentBindings) {
-                    Set<String> parentMembers = new HashSet<>(parentBindings.getMemberKeys());
-                    parentMembers.stream().forEach(
-                            id -> currentBindings.putMember(id, parentBindings.getMember(id))
-                    );
-                }
+    public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
+
+        Value parentBindings = parentContext.getBindings(language.toPolyglot());
+        Value currentBindings = ctx.getBindings(language.toPolyglot());
+        synchronized (currentBindings) {
+            synchronized (parentBindings) {
+                Set<String> parentMembers = new HashSet<>(parentBindings.getMemberKeys());
+                parentMembers.stream().forEach(
+                        id -> currentBindings.putMember(id, parentBindings.getMember(id))
+                );
             }
         }
+
+    }
+
+    @Override
+    public Nesting getListenerNesting() {
+        return Nesting.Naive;
     }
 
 }

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.napilnik.truffletests.vm.ReBinder;
 import net.napilnik.truffletests.vm.VMContext;
 import net.napilnik.truffletests.vm.events.VMContextEvent;
 import net.napilnik.truffletests.vm.events.VMContextEventType;
@@ -32,29 +33,21 @@ public class BindObjectEvent extends VMContextEvent<VMContext> {
 
     private static final long serialVersionUID = -5128246791062201145L;
     private final Nesting nesting;
-    private final List<VMContext> childs;
     private final Map<String, Object> bindings;
+    private final ReBinder rebinder;
 
-    public BindObjectEvent(VMContext source, Nesting nesting, List<VMContext> childs, String identificator, Object javaObject) {
+    public BindObjectEvent(VMContext source, Nesting nesting, ReBinder rebinder, String identificator, Object javaObject) {
         super(source, VMContextEventType.BindObject);
         this.nesting = nesting;
-        this.childs = childs;
+        this.rebinder = rebinder;
         bindings = new HashMap<>();
         bindings.put(identificator, javaObject);
     }
 
-    public BindObjectEvent(VMContext source, Nesting nesting, List<VMContext> childs, Map<String, Object> javaObjects) {
+    public BindObjectEvent(VMContext source, Nesting nesting, ReBinder rebinder, Map<String, Object> javaObjects) {
         super(source, VMContextEventType.BindObject);
         this.nesting = nesting;
-        this.childs = childs;
-        bindings = new HashMap<>(javaObjects);
-    }
-
-    public BindObjectEvent(VMContext source, Nesting nesting, VMContext child, Map<String, Object> javaObjects) {
-        super(source, VMContextEventType.BindObject);
-        this.nesting = nesting;
-        this.childs = new ArrayList<>(1);
-        this.childs.add(child);
+        this.rebinder = rebinder;
         bindings = new HashMap<>(javaObjects);
     }
 
@@ -62,8 +55,8 @@ public class BindObjectEvent extends VMContextEvent<VMContext> {
         return nesting;
     }
 
-    public final List<VMContext> getChilds() {
-        return childs;
+    public final ReBinder getRebinder() {
+        return rebinder;
     }
 
     public final Map<String, Object> getBindings() {

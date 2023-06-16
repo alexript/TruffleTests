@@ -27,15 +27,18 @@ import org.graalvm.polyglot.Source;
 class CacheListener implements VMContextNestingListener {
 
     @Override
-    public void onNesting(VMLanguage language, Context parentContext, Context ctx, Nesting nesting) {
-        if (nesting == Nesting.Cache) {
-            synchronized (parentContext) {
-                Set<Source> cachedSources = parentContext.getEngine().getCachedSources();
-                for (Source s : cachedSources) {
-                    ctx.eval(s);
-                }
+    public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
+        synchronized (parentContext) {
+            Set<Source> cachedSources = parentContext.getEngine().getCachedSources();
+            for (Source s : cachedSources) {
+                ctx.eval(s);
             }
         }
+    }
+
+    @Override
+    public Nesting getListenerNesting() {
+        return Nesting.Cache;
     }
 
 }

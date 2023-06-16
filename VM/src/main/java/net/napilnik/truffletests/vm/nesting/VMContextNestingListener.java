@@ -31,13 +31,17 @@ public interface VMContextNestingListener extends VMContextListener {
     public default void onEvent(VMContextEvent event) {
         VMContextEventType type = event.getType();
         if (type == VMContextEventType.Nesting && event instanceof VMContextNestingEvent nestingEvent) {
-            VMLanguage language = nestingEvent.getLanguage();
-            Context ctx = nestingEvent.getSource();
-            Context parentContext = nestingEvent.getParentPolyglotContext();
-            onNesting(language, parentContext, ctx, nestingEvent.getNesting());
+            if (nestingEvent.getNesting() == getListenerNesting()) {
+                VMLanguage language = nestingEvent.getLanguage();
+                Context ctx = nestingEvent.getSource();
+                Context parentContext = nestingEvent.getParentPolyglotContext();
+                onNesting(language, parentContext, ctx);
+            }
         }
     }
 
-    void onNesting(VMLanguage language, Context parentContext, Context ctx, Nesting nesting);
+    Nesting getListenerNesting();
+
+    void onNesting(VMLanguage language, Context parentContext, Context ctx);
 
 }

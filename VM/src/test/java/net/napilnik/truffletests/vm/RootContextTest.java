@@ -13,24 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm.nesting;
+package net.napilnik.truffletests.vm;
 
-import net.napilnik.truffletests.vm.VMLanguage;
-import org.graalvm.polyglot.Context;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *
  * @author malyshev
  */
-class NoneListener implements VMContextNestingListener {
+public class RootContextTest {
 
-    @Override
-    public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
+    @Test
+    public void testSecondRoot() {
+        VMContext seconRoot = VM.root("Second");
+        Assertions.assertFalse(VMRootContextsContainer.GLOBALCONTEXT == seconRoot);
     }
 
-    @Override
-    public Nesting getListenerNesting() {
-        return Nesting.None;
+    @Test
+    public void testRootReusage() {
+        String rootName = "Reusage";
+        VMContext root1 = VM.root(rootName);
+        VMContext root2 = VM.root(rootName);
+        Assertions.assertTrue(root1 == root2);
     }
-
 }

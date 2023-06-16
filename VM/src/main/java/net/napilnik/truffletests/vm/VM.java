@@ -53,6 +53,10 @@ public class VM {
         return inspectedEvaluation;
     }
 
+    public static VMContext root(String newRootName) {
+        return VMContext.constructRootContext(newRootName);
+    }
+
     public static VMContext context() {
         return context(Nesting.None);
     }
@@ -66,7 +70,7 @@ public class VM {
     }
 
     protected static VMContext context(String contextName, Nesting nestingMode, boolean withInspection) {
-        return context(contextName, VMContext.GLOBALCONTEXT, nestingMode, withInspection);
+        return context(contextName, VMRootContextsContainer.GLOBALCONTEXT, nestingMode, withInspection);
     }
 
     public static VMContext context(VMContext parentContext, Nesting nestingMode) {
@@ -78,13 +82,12 @@ public class VM {
     }
 
     protected static VMContext context(String contextName, VMContext parentContext, Nesting nestingMode, boolean withInspection) {
-        Nesting nest = nestingMode == Nesting.None ? Nesting.Naive : nestingMode;
-        VMContext instance = parentContext.create(contextName, nest, withInspection);
+        VMContext instance = parentContext.create(contextName, nestingMode, withInspection);
         prepareInstance(instance);
         return instance;
     }
 
-    private static void prepareInstance(VMContext instance) {
+    protected static void prepareInstance(VMContext instance) {
         VMContextEvent<VMContext> event = new VMContextEvent<>(instance, VMContextEventType.ContextPrepared);
         getContextEventEmitter().emitEvent(event);
     }

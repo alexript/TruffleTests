@@ -15,9 +15,6 @@
  */
 package net.napilnik.truffletests.vm.javabridge;
 
-import java.util.List;
-import java.util.Map;
-import net.napilnik.truffletests.vm.VMContext;
 import net.napilnik.truffletests.vm.events.VMContextEvent;
 import net.napilnik.truffletests.vm.events.VMContextEventType;
 import net.napilnik.truffletests.vm.events.VMContextListener;
@@ -33,13 +30,7 @@ public class BindObjectListener implements VMContextListener {
     public void onEvent(VMContextEvent event) {
         if (event.getType() == VMContextEventType.BindObject && event instanceof BindObjectEvent bindEvent) {
             if (bindEvent.getNesting() == Nesting.Cache) {
-                List<VMContext> childs = bindEvent.getChilds();
-                if (childs != null && !childs.isEmpty()) {
-                    Map<String, Object> boundObjects = bindEvent.getBindings();
-                    for (VMContext ctx : childs) {
-                        ctx.bindObjects(boundObjects);
-                    }
-                }
+                bindEvent.getRebinder().rebind(bindEvent);
             }
         }
     }

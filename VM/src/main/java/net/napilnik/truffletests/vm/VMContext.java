@@ -49,18 +49,32 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     private final VMContext parent;
     private final String contextName;
     private final Nesting nesting;
-    protected static final VMContext GLOBALCONTEXT = constructGlobalContext();
 
-    private static VMContext constructGlobalContext() {
-        return constructGlobalContext("");
+    private static final VMRootContextsContainer ROOTS = new VMRootContextsContainer();
+
+    protected static VMContext constructRootContext(String contextName) {
+
+        return constructRootContext(contextName, false);
     }
 
-    private static VMContext constructGlobalContext(String contextName) {
-        VM.addContextListener(new HostAccessListener()); // To be sure
-        VM.addContextListener(new BindObjectListener()); // To be sure
+    protected static VMContext constructRootContext(String contextName, boolean isGlobal) {
+        VMContext vmContext;
+        if (isGlobal) {
+            vmContext = constructNewRootContext(contextName);
+        } else {
+            if (ROOTS.contains(contextName)) {
+                vmContext = ROOTS.get(contextName);
+            } else {
+                vmContext = constructNewRootContext(contextName);
+                ROOTS.store(contextName, vmContext);
+            }
 
+        }
+        return vmContext;
+    }
+
+    private static VMContext constructNewRootContext(String contextName) {
         VMContext vmContext = new VMContext("<RootContext" + contextName + ">", VMLanguage.JS, null, Nesting.None, false);
-
         fireBridgeEvent(new BridgeEvent(vmContext, Nesting.None));
 
         try {
@@ -68,6 +82,8 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         } catch (VMException ex) {
             Logger.getLogger(VMContext.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        VM.prepareInstance(vmContext);
         return vmContext;
     }
 
@@ -99,27 +115,19 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .allowExperimentalOptions(true)
                 .allowInnerContextOptions(true)
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
-                //                .hostClassLoader(ClassLoader.getSystemClassLoader())
                 .hostClassLoader(VM.class.getClassLoader());
 
-//        System.out.println("%s -> %s".formatted(((parent == null) ? "null" : parent.toString()), nestingMode.name()));
-        if (parent == null) {
-            Engine engine = Engine.newBuilder().build();
-            builderTemplate.engine(engine);
+        Engine engine;
+        if (parent == null || parent == VMRootContextsContainer.GLOBALCONTEXT) {
+            engine = Engine.newBuilder().build();
         } else {
-            if (parent == GLOBALCONTEXT) {
-                Engine engine = Engine.newBuilder().build();
-                builderTemplate.engine(engine);
+            if (nestingMode == Nesting.Cache) {
+                engine = parent.getPolyglotContext().getEngine();
             } else {
-                if (nestingMode != Nesting.Cache) {
-                    Engine engine = Engine.newBuilder().build();
-                    builderTemplate.engine(engine);
-
-                } else {
-                    builderTemplate.engine(parent.getPolyglotContext().getEngine());
-                }
+                engine = Engine.newBuilder().build();
             }
         }
+        builderTemplate.engine(engine);
         Context ctx = builderTemplate.build();
         if (parent != null) {
             fireContextNestingEvent(new VMContextNestingEvent(lng, parent.getPolyglotContext(), ctx, nestingMode));
@@ -132,8 +140,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         childs.add(ctx);
 
         fireBridgeEvent(new BridgeEvent(ctx, nestingMode));
-
-        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, ctx, getBoundObjects()));
+        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, new ReBinder(ctx), getBoundObjects()));
 
         return ctx;
     }
@@ -143,8 +150,8 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         childs.add(ctx);
 
         fireBridgeEvent(new BridgeEvent(ctx, nestingMode));
+        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, new ReBinder(ctx), getBoundObjects()));
 
-        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, ctx, getBoundObjects()));
         return ctx;
     }
 
@@ -192,17 +199,17 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         return appliedObjects;
     }
 
-    // TODO: no public access
-    public void bindObject(String identificator, Object javaObject) {
+    private void bindObject(String identificator, Object javaObject) {
         Value bindings = this.getBindings();
         bindings.putMember(identificator, javaObject);
         appliedObjects.put(identificator, javaObject);
 
-        fireBindObjectEvent(new BindObjectEvent(this, nesting, childs, identificator, javaObject));
+        if (childs != null && !childs.isEmpty()) {
+            fireBindObjectEvent(new BindObjectEvent(this, nesting, new ReBinder(childs), identificator, javaObject));
+        }
     }
 
-    // TODO: no public access
-    public void bindObjects(Map<String, Object> javaObjects) {
+    protected void bindObjects(Map<String, Object> javaObjects) {
         Value bindings = this.getBindings();
         for (Map.Entry<String, Object> entry : javaObjects.entrySet()) {
             String identificator = entry.getKey();
@@ -210,8 +217,9 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
             bindings.putMember(identificator, javaObject);
             appliedObjects.put(identificator, javaObject);
         }
-
-        fireBindObjectEvent(new BindObjectEvent(this, nesting, childs, javaObjects));
+        if (childs != null && !childs.isEmpty()) {
+            fireBindObjectEvent(new BindObjectEvent(this, nesting, new ReBinder(childs), javaObjects));
+        }
     }
 
     private Object prepareJSObject(Object object) {
