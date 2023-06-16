@@ -17,7 +17,6 @@ package net.napilnik.truffletests.vm;
 
 import net.napilnik.truffletests.vm.inspection.VMInspectionListener;
 import net.napilnik.truffletests.vm.inspection.VMInspector;
-import net.napilnik.truffletests.vm.nesting.Nesting;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;

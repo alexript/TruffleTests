@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm.events;
+package net.napilnik.truffletests.vm.javabridge;
+
+import net.napilnik.truffletests.vm.events.VMContextEvent;
+import net.napilnik.truffletests.vm.events.VMContextEventType;
+import org.graalvm.polyglot.HostAccess;
 
 /**
  *
  * @author malyshev
  */
-public enum VMContextEventType {
-    Bridging,
-    HostAccess,
-    BindObject,
-    Nesting,
-    ContextPrepared;
+public class HostAccessEvent extends VMContextEvent<HostAccess.Builder> {
+
+    private static final long serialVersionUID = -1194299118798630337L;
+
+    public HostAccessEvent(HostAccess.Builder source) {
+        super(source, VMContextEventType.HostAccess);
+    }
+
 }

@@ -60,9 +60,9 @@ public class ContextNestingTest {
     }
 
     @Test
-    public void testNaiveNesting() {
+    public void testNaiveNestingObjects() {
         try {
-            VMScript script = new VMScript("testNaiveNesting.js",
+            VMScript script = new VMScript("testNaiveNestingObjects.js",
                     """
                         function getAnswer() {
                              return 41;
@@ -73,7 +73,7 @@ public class ContextNestingTest {
                         }
                     """);
 
-            VMScript scriptNested = new VMScript("testNaiveNestingNested.js",
+            VMScript scriptNested = new VMScript("testNaiveNestingObjectsNested.js",
                     """
                         function getAnswer() {
                              return 42;
@@ -115,16 +115,71 @@ public class ContextNestingTest {
     }
 
     @Test
-    public void testCacheNesting() {
+    public void testCacheNestingObjects() {
         try {
-            VMScript script = new VMScript("testCacheNesting.js",
+            VMScript script = new VMScript("testCacheNestingObjects.js",
+                    """
+                        function getAnswer() {
+                             return 41;
+                        }
+
+                        function getAnswerPair() {
+                            return new Pair('answer', 41);
+                        }
+                    """);
+
+            VMScript scriptNested = new VMScript("testCacheNestingObjectsNested.js",
+                    """
+                        function getAnswer() {
+                             return 42;
+                        }
+
+                        function getAnswerPair() {
+                            return new Pair('answer', 42);
+                        }
+                    """);
+
+            try (VMContext context = VM.context("OuterContext", Nesting.Cache)) {
+                context.eval(script);
+
+                Integer result = context.eval("getAnswer", Integer.class);
+                Assertions.assertEquals(41, result);
+
+                Pair pair = context.eval("getAnswerPair", Pair.class);
+                Assertions.assertEquals(41, pair.tail()[0]);
+
+                context.addObject("OuterObject", new Object());
+
+                try (VMContext nestedContext = VM.context("InnerContext", context, Nesting.Cache)) {
+
+                    nestedContext.eval(scriptNested);
+
+                    Integer resultNested = nestedContext.eval("getAnswer", Integer.class);
+                    Assertions.assertEquals(42, resultNested);
+
+                    Pair pairNested = nestedContext.eval("getAnswerPair", Pair.class);
+                    Assertions.assertEquals(42, pairNested.tail()[0]);
+
+                    nestedContext.addObject("InnerObject", new Object());
+                }
+
+            }
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
+    public void testCacheNestingFunctions() {
+        try {
+            VMScript script = new VMScript("testCacheNestingFunctions.js",
                     """
                         function getTheAnswer() {
                              return 42;
                         }
                     """);
 
-            VMScript scriptNested = new VMScript("testCacheNestingInner.js",
+            VMScript scriptNested = new VMScript("testCacheNestingFunctionsInner.js",
                     """
                         function getAnswer() {
                              return getTheAnswer();
@@ -146,14 +201,14 @@ public class ContextNestingTest {
     }
 
     @Test
-    public void testCacheConstantsNesting() {
+    public void testCacheNestingConstants() {
         try {
-            VMScript script = new VMScript("testCacheConstantsNesting.js",
+            VMScript script = new VMScript("testCacheNestingConstants.js",
                     """
                         const answer = 42;
                     """);
 
-            VMScript scriptNested = new VMScript("testCacheConstantsNestingInner.js",
+            VMScript scriptNested = new VMScript("testCacheNestingConstantsInner.js",
                     """
                         function getAnswer() {
                              return answer;

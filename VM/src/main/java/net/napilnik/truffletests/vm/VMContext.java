@@ -15,20 +15,28 @@
  */
 package net.napilnik.truffletests.vm;
 
+import net.napilnik.truffletests.vm.javabridge.HostAccessProvider;
 import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.napilnik.truffletests.vm.javabridge.BindObjectEvent;
+import net.napilnik.truffletests.vm.javabridge.BindObjectListener;
 import net.napilnik.truffletests.vm.javabridge.BridgeEvent;
 import net.napilnik.truffletests.vm.javabridge.BridgeListener;
+import net.napilnik.truffletests.vm.javabridge.HostAccessEvent;
+import net.napilnik.truffletests.vm.javabridge.HostAccessListener;
 import net.napilnik.truffletests.vm.nesting.VMContextNestingEvent;
 import net.napilnik.truffletests.vm.nesting.VMContextNestingListener;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.EnvironmentAccess;
+import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
 /**
@@ -40,6 +48,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     private final List<VMContext> childs;
     private final VMContext parent;
     private final String contextName;
+    private final Nesting nesting;
     protected static final VMContext GLOBALCONTEXT = constructGlobalContext();
 
     private static VMContext constructGlobalContext() {
@@ -47,9 +56,12 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private static VMContext constructGlobalContext(String contextName) {
+        VM.addContextListener(new HostAccessListener()); // To be sure
+        VM.addContextListener(new BindObjectListener()); // To be sure
+
         VMContext vmContext = new VMContext("<RootContext" + contextName + ">", VMLanguage.JS, null, Nesting.None, false);
-        BridgeEvent event = new BridgeEvent(vmContext, Nesting.None);
-        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+
+        fireBridgeEvent(new BridgeEvent(vmContext, Nesting.None));
 
         try {
             VMStdLib.apply(vmContext);
@@ -68,6 +80,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         childs = new ArrayList<>();
         this.parent = parent;
         this.contextName = contextName;
+        this.nesting = nestingMode;
     }
 
     @Override
@@ -76,14 +89,18 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private static Context buildContext(VMLanguage lng, PolyglotContextProvider parent, Nesting nestingMode) {
+        HostAccess.Builder hostAccessBuilder = HostAccessProvider.build();
+        fireHostAccessEvent(new HostAccessEvent(hostAccessBuilder));
+
         Context.Builder builderTemplate = Context.newBuilder(lng.toPolyglot())
-                .allowHostAccess(HostAccessProvider.HOST_ACCESS)
+                .allowHostAccess(hostAccessBuilder.build())
                 .allowCreateThread(true)
                 .allowValueSharing(true)
                 .allowExperimentalOptions(true)
                 .allowInnerContextOptions(true)
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
-                .hostClassLoader(ClassLoader.getSystemClassLoader());
+                //                .hostClassLoader(ClassLoader.getSystemClassLoader())
+                .hostClassLoader(VM.class.getClassLoader());
 
 //        System.out.println("%s -> %s".formatted(((parent == null) ? "null" : parent.toString()), nestingMode.name()));
         if (parent == null) {
@@ -105,23 +122,29 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         }
         Context ctx = builderTemplate.build();
         if (parent != null) {
-            VMContextNestingEvent event = new VMContextNestingEvent(lng, parent.getPolyglotContext(), ctx, nestingMode);
-            VM.getContextEventEmitter().emitEvent(event, VMContextNestingListener.class);
+            fireContextNestingEvent(new VMContextNestingEvent(lng, parent.getPolyglotContext(), ctx, nestingMode));
         }
         return ctx;
     }
 
     protected VMContext create(String contextName, Nesting nestingMode, boolean withInspection) {
         VMContext ctx = new VMContext(contextName, this, nestingMode, withInspection);
-        BridgeEvent event = new BridgeEvent(ctx, nestingMode);
-        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        childs.add(ctx);
+
+        fireBridgeEvent(new BridgeEvent(ctx, nestingMode));
+
+        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, ctx, getBoundObjects()));
+
         return ctx;
     }
 
     protected VMContext create(String contextName, VMLanguage lng, Nesting nestingMode, boolean withInspection) {
         VMContext ctx = new VMContext(contextName, lng, this, nestingMode, withInspection);
-        BridgeEvent event = new BridgeEvent(ctx, nestingMode);
-        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        childs.add(ctx);
+
+        fireBridgeEvent(new BridgeEvent(ctx, nestingMode));
+
+        fireBindObjectEvent(new BindObjectEvent(this, nestingMode, ctx, getBoundObjects()));
         return ctx;
     }
 
@@ -157,15 +180,38 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         addObject(identificator, object);
     }
 
+    private final Map<String, Object> appliedObjects = new HashMap<>();
+
     public void addObject(String identificator, Object object) {
-        synchronized (this.getPolyglotContext()) {
-            Value bindings = this.getBindings();
-            Object jsObject = prepareJSObject(object);
-            bindings.putMember(identificator, jsObject);
+        Object jsObject = prepareJSObject(object);
+        applyAccessors(identificator, jsObject);
+        bindObject(identificator, jsObject);
+    }
 
-            applyAccessors(identificator, jsObject);
+    private Map<String, Object> getBoundObjects() {
+        return appliedObjects;
+    }
 
+    // TODO: no public access
+    public void bindObject(String identificator, Object javaObject) {
+        Value bindings = this.getBindings();
+        bindings.putMember(identificator, javaObject);
+        appliedObjects.put(identificator, javaObject);
+
+        fireBindObjectEvent(new BindObjectEvent(this, nesting, childs, identificator, javaObject));
+    }
+
+    // TODO: no public access
+    public void bindObjects(Map<String, Object> javaObjects) {
+        Value bindings = this.getBindings();
+        for (Map.Entry<String, Object> entry : javaObjects.entrySet()) {
+            String identificator = entry.getKey();
+            Object javaObject = entry.getValue();
+            bindings.putMember(identificator, javaObject);
+            appliedObjects.put(identificator, javaObject);
         }
+
+        fireBindObjectEvent(new BindObjectEvent(this, nesting, childs, javaObjects));
     }
 
     private Object prepareJSObject(Object object) {
@@ -240,6 +286,22 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         if (parent != null) {
             parent.childs.remove(this);
         }
+    }
+
+    private static void fireBridgeEvent(BridgeEvent event) {
+        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+    }
+
+    private static void fireBindObjectEvent(BindObjectEvent event) {
+        VM.getContextEventEmitter().emitEvent(event, BindObjectListener.class);
+    }
+
+    private static void fireContextNestingEvent(VMContextNestingEvent event) {
+        VM.getContextEventEmitter().emitEvent(event, VMContextNestingListener.class);
+    }
+
+    private static void fireHostAccessEvent(HostAccessEvent event) {
+        VM.getContextEventEmitter().emitEvent(event, HostAccessListener.class);
     }
 
 }

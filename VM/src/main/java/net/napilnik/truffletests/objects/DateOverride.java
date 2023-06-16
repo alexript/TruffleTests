@@ -16,6 +16,9 @@
 package net.napilnik.truffletests.objects;
 
 import com.google.gson.internal.bind.util.ISO8601Utils;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -23,15 +26,20 @@ import java.util.Set;
 import net.napilnik.truffletests.vm.VMAccess;
 import net.napilnik.truffletests.vm.VMContextInjection;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyDate;
 import org.graalvm.polyglot.proxy.ProxyExecutable;
 import org.graalvm.polyglot.proxy.ProxyObject;
+import org.graalvm.polyglot.proxy.ProxyTime;
+import org.graalvm.polyglot.proxy.ProxyTimeZone;
 
 /**
  *
  * @author malyshev
  */
 @VMContextInjection(contextObjectName = "Date")
-public class DateOverride extends Date implements ProxyObject {
+public class DateOverride extends Date implements
+        ProxyObject,
+        ProxyDate, ProxyTime, ProxyTimeZone {
 
     private static final long serialVersionUID = -3400411885843649559L;
 
@@ -69,7 +77,8 @@ public class DateOverride extends Date implements ProxyObject {
                 // Currently defaulting to Date.toString, but could improve
                 return (ProxyExecutable) arguments -> toString();
             }
-            default -> throw new UnsupportedOperationException("This date does not support: " + key);
+            default ->
+                throw new UnsupportedOperationException("This date does not support: " + key);
         }
     }
 
@@ -86,5 +95,24 @@ public class DateOverride extends Date implements ProxyObject {
     @Override
     public void putMember(String key, Value value) {
         throw new UnsupportedOperationException("This date does not support adding new properties/functions.");
+    }
+
+    @Override
+    public LocalDate asDate() {
+        return toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    @Override
+    public LocalTime asTime() {
+        return toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalTime();
+    }
+
+    @Override
+    public ZoneId asTimeZone() {
+        return toInstant().atZone(ZoneId.systemDefault()).getZone();
     }
 }

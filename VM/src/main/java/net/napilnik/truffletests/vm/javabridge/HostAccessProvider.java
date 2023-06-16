@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.javabridge;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,17 +22,18 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import net.napilnik.truffletests.vm.VMAccess;
 import org.graalvm.polyglot.HostAccess;
 
 /**
  *
  * @author malyshev
  */
-class HostAccessProvider {
+public class HostAccessProvider {
 
-    protected static final HostAccess HOST_ACCESS = buildHostAccess();
+    protected static final HostAccess DEFAULT_HOST_ACCESS = buildHostAccess().build();
 
-    private static HostAccess buildHostAccess() {
+    private static HostAccess.Builder buildHostAccess() {
         HostAccess.Builder builder = HostAccess.newBuilder().
                 allowPublicAccess(false).
                 allowAccessAnnotatedBy(VMAccess.class).
@@ -59,7 +60,7 @@ class HostAccessProvider {
         allowAll(builder, Character.class);
         allowAll(builder, Boolean.class);
 
-        return builder.build();
+        return builder;
     }
 
     private static void allowAll(HostAccess.Builder access, Class c) {
@@ -81,6 +82,10 @@ class HostAccessProvider {
                 access.allowAccess(method);
             }
         }
+    }
+
+    public static HostAccess.Builder build() {
+        return buildHostAccess();
     }
 
 }

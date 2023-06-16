@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.objects;
 
 import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.util.Date;
+import net.napilnik.truffletests.vm.VM;
+import net.napilnik.truffletests.vm.VMAccess;
+import net.napilnik.truffletests.vm.VMContext;
+import net.napilnik.truffletests.vm.VMContextInjection;
+import net.napilnik.truffletests.vm.VMException;
+import net.napilnik.truffletests.vm.VMScript;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
@@ -25,16 +31,28 @@ import org.junit.jupiter.api.Test;
  *
  * @author malyshev
  */
-public class JSDateTest {
+public class DateOverrideTest {
 
     @Test
-    public void testJsDate() {
+    public void testDate() {
         try {
-            VMScript script = new VMScript("jsDateTest.js", "function getDate() {return new Date();}");
-            VMContext context = VM.context(Nesting.None);
-            try (context) {
-                context.eval(script);
-                Date result = context.eval("getDate", Date.class);
+            VMScript script = new VMScript("testDate.js", "function getDate() {return new Date();}");
+            VMContext contextNone = VM.context(Nesting.None);
+            try (contextNone) {
+                contextNone.eval(script);
+                Date result = contextNone.eval("getDate", Date.class);
+                assertNotNull(result);
+            }
+            VMContext contextNaive = VM.context(Nesting.Naive);
+            try (contextNaive) {
+                contextNaive.eval(script);
+                Date result = contextNaive.eval("getDate", Date.class);
+                assertNotNull(result);
+            }
+            VMContext contextCache = VM.context(Nesting.Cache);
+            try (contextCache) {
+                contextCache.eval(script);
+                Date result = contextCache.eval("getDate", Date.class);
                 assertNotNull(result);
             }
         } catch (VMException ex) {

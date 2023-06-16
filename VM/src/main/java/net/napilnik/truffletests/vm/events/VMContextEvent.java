@@ -16,7 +16,6 @@
 package net.napilnik.truffletests.vm.events;
 
 import java.util.EventObject;
-import net.napilnik.truffletests.vm.VMContext;
 
 /**
  *

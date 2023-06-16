@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm.events;
+package net.napilnik.truffletests.vm.javabridge;
+
+import net.napilnik.truffletests.vm.events.VMContextEvent;
+import net.napilnik.truffletests.vm.events.VMContextEventType;
+import net.napilnik.truffletests.vm.events.VMContextListener;
+import org.graalvm.polyglot.HostAccess;
 
 /**
  *
  * @author malyshev
  */
-public enum VMContextEventType {
-    Bridging,
-    HostAccess,
-    BindObject,
-    Nesting,
-    ContextPrepared;
+public class HostAccessListener implements VMContextListener {
+
+    @Override
+    public void onEvent(VMContextEvent event) {
+        if (event.getType() == VMContextEventType.HostAccess && event instanceof HostAccessEvent hostAccessEvevnt) {
+            HostAccess.Builder builder = hostAccessEvevnt.getSource();
+
+        }
+    }
+
 }
