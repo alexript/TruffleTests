@@ -16,6 +16,7 @@
 package net.napilnik.executor;
 
 import net.napilnik.app.App;
+import net.napilnik.app.AppModule;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +34,7 @@ public class AppExecutorTest {
     public void testAppObject() {
         String appMnemo = "appobjtest";
         App app = new App(appMnemo, "AppObject Test");
-        app.addScript("testAppObject.js", "function getAppMnemo() { return Application.mnemo; }");
+        app.addScript(AppModule.SCRIPT_TYPE.Shared, "testAppObject.js", "function getAppMnemo() { return Application.mnemo; }");
         try (AppExecutor executor = new AppExecutor(app)) {
             String result = executor.eval("getAppMnemo", String.class);
             assertEquals(appMnemo, result);

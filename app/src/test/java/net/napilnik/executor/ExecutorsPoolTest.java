@@ -16,6 +16,7 @@
 package net.napilnik.executor;
 
 import net.napilnik.app.App;
+import net.napilnik.app.AppModule;
 import net.napilnik.truffletests.vm.Evaluator;
 import net.napilnik.truffletests.vm.VMException;
 import net.napilnik.truffletests.vm.VMNoFunctionException;
@@ -30,7 +31,7 @@ public class ExecutorsPoolTest {
 
     private static int usecaseFor(int total, ExecutorsPool pool) throws VMException {
         App app = new App("pooltest", "ExecutorsPool test");
-        app.addScript("summ.js", "function incOne(i) { return i+1; }");
+        app.addScript(AppModule.SCRIPT_TYPE.Shared, "summ.js", "function incOne(i) { return i+1; }");
         int result = 0;
         for (int i = 0; i < total; i++) {
             try {

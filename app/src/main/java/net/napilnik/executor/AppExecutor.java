@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.napilnik.app.App;
+import net.napilnik.app.AppModule;
 import net.napilnik.truffletests.vm.Evaluator;
 import net.napilnik.truffletests.vm.VM;
 import net.napilnik.truffletests.vm.VMContext;
@@ -58,8 +59,9 @@ class AppExecutor implements Evaluator {
         try {
             appContext.addObject(new AppObject(app));
 
-            Map<String, String> scripts = app.getScripts();
-            for (Map.Entry<String, String> entry : scripts.entrySet()) {
+            Map<String, String> sharedScripts = app.getScripts(AppModule.SCRIPT_TYPE.Shared);
+            Map<String, String> serverScripts = app.getScripts(AppModule.SCRIPT_TYPE.Server);
+            for (Map.Entry<String, String> entry : sharedScripts.entrySet()) {
                 try {
                     VMScript s = new VMScript(entry.getKey(), entry.getValue());
                     appContext.eval(s);
@@ -67,6 +69,16 @@ class AppExecutor implements Evaluator {
                     Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+
+            for (Map.Entry<String, String> entry : serverScripts.entrySet()) {
+                try {
+                    VMScript s = new VMScript(entry.getKey(), entry.getValue());
+                    appContext.eval(s);
+                } catch (VMException ex) { // Отдельный catch на каждую итерацию, чтоб пропустить бяку, а не остановиться после первой же бяки.
+                    Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
         } catch (VMException ex) {
             Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
         }
