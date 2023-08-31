@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.graalvm.polyglot.Source;
 
 /**
+ * Фасад, прячущий в себе полиглотный Script.
  *
  * @author malyshev
  */
@@ -89,7 +90,7 @@ public class VMScript {
         return VMLanguage.findByFilenameSuffix(sfx.get());
     }
 
-    public Source getSource() {
+    public final Source getSource() {
         return source;
     }
 

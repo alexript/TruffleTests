@@ -21,6 +21,7 @@ import net.napilnik.truffletests.vm.events.VMContextEventType;
 import org.graalvm.polyglot.Context;
 
 /**
+ * Событие вложения конекста выполнения как дочернего в родительский.
  *
  * @author malyshev
  */
@@ -38,14 +39,29 @@ public class VMContextNestingEvent extends VMContextEvent<Context> {
         this.nesting = nesting;
     }
 
+    /**
+     * Получить стратегию вложения, применяемую при вложении.
+     *
+     * @return стратегия вложения
+     */
     public final Nesting getNesting() {
         return nesting;
     }
 
+    /**
+     * Получить язык программирования.
+     *
+     * @return язык программирования
+     */
     public final VMLanguage getLanguage() {
         return lng;
     }
 
+    /**
+     * Получить контекст полиглота из родительского контекста выполнения.
+     *
+     * @return контекст полиглота родительского контекста выполнения.
+     */
     public final Context getParentPolyglotContext() {
         return parentContext;
     }

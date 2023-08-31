@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Источник события в контексте.
  *
  * @author malyshev
  */
@@ -30,6 +31,9 @@ public class VMContextEventEmitter implements VMEventEmitter<VMContextEvent, VMC
         listeners = new HashSet<>();
     }
 
+    /**
+     * Забыть всех слушателей.
+     */
     @Override
     public void clearContextListeners() {
         synchronized (listeners) {
@@ -37,6 +41,11 @@ public class VMContextEventEmitter implements VMEventEmitter<VMContextEvent, VMC
         }
     }
 
+    /**
+     * Добавить слушателя событий.
+     *
+     * @param listener
+     */
     @Override
     public void addContextListener(VMContextListener listener) {
         synchronized (listeners) {
@@ -44,6 +53,11 @@ public class VMContextEventEmitter implements VMEventEmitter<VMContextEvent, VMC
         }
     }
 
+    /**
+     * Забыть слушателя события.
+     *
+     * @param listener слушатель, которого надо забыть.
+     */
     @Override
     public void removeContextListener(VMContextListener listener) {
         synchronized (listeners) {
@@ -51,6 +65,11 @@ public class VMContextEventEmitter implements VMEventEmitter<VMContextEvent, VMC
         }
     }
 
+    /**
+     * Доставить событие всем слушателям.
+     *
+     * @param event событие.
+     */
     @Override
     public void emitEvent(VMContextEvent event) {
         synchronized (listeners) {
@@ -60,6 +79,12 @@ public class VMContextEventEmitter implements VMEventEmitter<VMContextEvent, VMC
         }
     }
 
+    /**
+     * Доставить событие слушателям определенного класса.
+     *
+     * @param event событие
+     * @param listenerClass класс слушателей.
+     */
     @Override
     public void emitEvent(VMContextEvent event, Class<? extends VMContextListener> listenerClass) {
         synchronized (listeners) {

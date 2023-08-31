@@ -19,7 +19,7 @@ package net.napilnik.truffletests.vm;
  *
  * @author malyshev
  */
-public class VMException extends Exception {
+public class VMException extends RuntimeException {
 
     private static final long serialVersionUID = -3851696387956091614L;
 

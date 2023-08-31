@@ -22,10 +22,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import net.napilnik.truffletests.vm.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMClass;
+import net.napilnik.truffletests.vm.annotations.VMObject;
 import org.graalvm.polyglot.HostAccess;
 
 /**
+ * Предоставлятор полиглотного построителя прав доступа.
  *
  * @author malyshev
  */
@@ -34,18 +37,20 @@ public class HostAccessProvider {
     protected static final HostAccess DEFAULT_HOST_ACCESS = buildHostAccess().build();
 
     private static HostAccess.Builder buildHostAccess() {
-        HostAccess.Builder builder = HostAccess.newBuilder().
-                allowPublicAccess(false).
-                allowAccessAnnotatedBy(VMAccess.class).
-                allowAllImplementations(true).
-                allowAllClassImplementations(true).
-                allowArrayAccess(true).
-                allowListAccess(true).
-                allowBufferAccess(true).
-                allowIterableAccess(true).
-                allowIteratorAccess(true).
-                allowMapAccess(true).
-                allowAccessInheritance(true);
+        HostAccess.Builder builder = HostAccess.newBuilder()
+                .allowPublicAccess(false)
+                .allowAccessAnnotatedBy(VMAccess.class)
+                .allowAccessAnnotatedBy(VMClass.class)
+                .allowAccessAnnotatedBy(VMObject.class)
+                .allowAllImplementations(true)
+                .allowAllClassImplementations(true)
+                .allowArrayAccess(true)
+                .allowListAccess(true)
+                .allowBufferAccess(true)
+                .allowIterableAccess(true)
+                .allowIteratorAccess(true)
+                .allowMapAccess(true)
+                .allowAccessInheritance(true);
 
         allowAll(builder, Object.class);
         allowAll(builder, Date.class);
@@ -84,6 +89,11 @@ public class HostAccessProvider {
         }
     }
 
+    /**
+     * Создать полиглотного построителя прав доступа.
+     *
+     * @return полиглотный построитель прав доступа.
+     */
     public static HostAccess.Builder build() {
         return buildHostAccess();
     }

@@ -22,6 +22,7 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;
 
 /**
+ * Адаптер выполнения чего-то на полиглот-контексте.
  *
  * @author malyshev
  */
@@ -87,19 +88,19 @@ abstract class VMEvaluator extends PolyglotContextProvider implements Evaluator 
     }
 
     @Override
-    public <T> T eval(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
+    public <T> T eval(String objectName, String functionName, Class<T> targetType, Object... objArray) throws VMException {
         if (!useInspector) {
-            return evalImpl(objectName, fieldName, targetType, objArray);
+            return evalImpl(objectName, functionName, targetType, objArray);
         }
         VMInspectionListener enterListener = VMInspector.createInspectionListener("On enter");
         VMInspectionListener returnListener = VMInspector.createInspectionListener("On return");
         VMInspector inspector = new VMInspector(this, enterListener, returnListener);
         try (inspector) {
-            return evalImpl(objectName, fieldName, targetType, objArray);
+            return evalImpl(objectName, functionName, targetType, objArray);
         } catch (VMException next) {
             throw next;
         } catch (Exception ex) {
-            processScriptException(ex, enterListener, "%s::%s".formatted(objectName, fieldName));
+            processScriptException(ex, enterListener, "%s::%s".formatted(objectName, functionName));
         }
         return null;
 
@@ -197,10 +198,10 @@ abstract class VMEvaluator extends PolyglotContextProvider implements Evaluator 
                 }
 
                 if (function == null) {
-                    throw new VMNoFunctionException("Function '" + functionName + "' not found");
+                    throw new VMNoFunctionException("Function '" + functionName + "' not found", functionName);
                 }
                 if (!function.canExecute()) {
-                    throw new VMNoFunctionException(functionName + " is not a function");
+                    throw new VMNoFunctionException(functionName + " is not a function", functionName);
                 }
                 if (objArray == null) {
                     objArray = new Object[0];
@@ -222,7 +223,7 @@ abstract class VMEvaluator extends PolyglotContextProvider implements Evaluator 
         }
     }
 
-    private <T> T evalImpl(String objectName, String fieldName, Class<T> targetType, Object... objArray) throws VMException {
+    private <T> T evalImpl(String objectName, String functionName, Class<T> targetType, Object... objArray) throws VMException {
         synchronized (ctx) {
             try {
                 Value result = null;
@@ -232,17 +233,17 @@ abstract class VMEvaluator extends PolyglotContextProvider implements Evaluator 
                 try {
                     Value member = this.getBindings().getMember(objectName);
                     if (member != null) {
-                        function = member.getMember(fieldName);
+                        function = member.getMember(functionName);
                     }
                 } catch (PolyglotException ex) {
                     throw new VMException(ex);
                 }
 
                 if (function == null) {
-                    throw new VMNoFunctionException("Function '" + fieldName + "' not found");
+                    throw new VMNoFunctionException("Function '" + functionName + "' not found", functionName);
                 }
                 if (!function.canExecute()) {
-                    throw new VMNoFunctionException(fieldName + " is not a function");
+                    throw new VMNoFunctionException(functionName + " is not a function", functionName);
                 }
                 if (objArray == null) {
                     objArray = new Object[0];

@@ -19,11 +19,19 @@ import net.napilnik.truffletests.vm.VMLanguage;
 import org.graalvm.polyglot.Context;
 
 /**
+ * Слушатель по стратегии None
  *
  * @author malyshev
  */
 class NoneListener implements VMContextNestingListener {
 
+    /**
+     * Ничего не делаем при вложении.
+     *
+     * @param language
+     * @param parentContext
+     * @param ctx
+     */
     @Override
     public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
     }

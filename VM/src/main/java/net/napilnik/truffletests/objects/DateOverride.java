@@ -23,20 +23,22 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import net.napilnik.truffletests.vm.VMAccess;
-import net.napilnik.truffletests.vm.VMContextInjection;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyDate;
 import org.graalvm.polyglot.proxy.ProxyExecutable;
 import org.graalvm.polyglot.proxy.ProxyObject;
 import org.graalvm.polyglot.proxy.ProxyTime;
 import org.graalvm.polyglot.proxy.ProxyTimeZone;
+import net.napilnik.truffletests.vm.annotations.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMClass;
 
 /**
+ * Класс, маскирующий Java Date под Javascript Date. Нагло засовывается в
+ * биндинги контекста полиглота поверх оригинального.
  *
  * @author malyshev
  */
-@VMContextInjection(contextObjectName = "Date")
+@VMClass(value = "Date")
 public class DateOverride extends Date implements
         ProxyObject,
         ProxyDate, ProxyTime, ProxyTimeZone {

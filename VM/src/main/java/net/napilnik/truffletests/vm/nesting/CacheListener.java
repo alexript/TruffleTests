@@ -21,11 +21,23 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Source;
 
 /**
+ * Вкладываем по стратегии Cache
  *
  * @author malyshev
  */
 class CacheListener implements VMContextNestingListener {
 
+    /**
+     * Берем с Engine родителя все, что на нем есть закэшированного и выполняем
+     * на контексте дочки. Если дочка создана с тем же самым экземпляром Engine,
+     * то полиглот просто производит перерегистрацию и не занимается
+     * интерпритацией и выполнением закэшированного. очевидно, что то, что не
+     * закэшировано, в дочку так не попадет.
+     *
+     * @param language
+     * @param parentContext
+     * @param ctx
+     */
     @Override
     public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
         synchronized (parentContext) {

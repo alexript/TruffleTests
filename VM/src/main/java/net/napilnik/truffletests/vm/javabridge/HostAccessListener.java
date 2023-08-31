@@ -21,17 +21,25 @@ import net.napilnik.truffletests.vm.events.VMContextListener;
 import org.graalvm.polyglot.HostAccess;
 
 /**
+ * Слушатель события созданий прав доступа.
  *
  * @author malyshev
  */
-public class HostAccessListener implements VMContextListener {
+public abstract class HostAccessListener implements VMContextListener {
 
     @Override
     public void onEvent(VMContextEvent event) {
         if (event.getType() == VMContextEventType.HostAccess && event instanceof HostAccessEvent hostAccessEvevnt) {
             HostAccess.Builder builder = hostAccessEvevnt.getSource();
-
+            specify(builder);
         }
     }
+
+    /**
+     * Уточнить параметры билдера прав доступа.
+     *
+     * @param builder полиглотный построитель прав доступа.
+     */
+    public abstract void specify(HostAccess.Builder builder);
 
 }

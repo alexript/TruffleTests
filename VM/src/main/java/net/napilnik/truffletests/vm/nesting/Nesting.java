@@ -16,22 +16,32 @@
 package net.napilnik.truffletests.vm.nesting;
 
 /**
+ * Стратегии вложения контекстов друг в друга.
  *
  * @author malyshev
  */
 public enum Nesting {
+    /**
+     * Игнорировать родительский контекст.
+     */
     None() {
         @Override
         public VMContextNestingListener createNestingListener() {
             return new NoneListener();
         }
     },
+    /**
+     * Копировать все подряд из родительского контекста в дочерний.
+     */
     Naive() {
         @Override
         public VMContextNestingListener createNestingListener() {
             return new NaiveListener();
         }
     },
+    /**
+     * Переиспользовать полиглотовский Engine и брать с него закэшированное.
+     */
     Cache() {
         @Override
         public VMContextNestingListener createNestingListener() {
@@ -43,5 +53,10 @@ public enum Nesting {
 
     }
 
+    /**
+     * Создать слушателя события вложения контекста выполнения.
+     *
+     * @return слушатель
+     */
     public abstract VMContextNestingListener createNestingListener();
 }

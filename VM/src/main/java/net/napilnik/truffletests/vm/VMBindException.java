@@ -15,18 +15,31 @@
  */
 package net.napilnik.truffletests.vm;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
  *
  * @author malyshev
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(value = ElementType.TYPE)
-public @interface VMContextInjection {
+public class VMBindException extends VMException {
 
-    String contextObjectName();
+    private static final long serialVersionUID = 1451787711852129436L;
+    private final String bindingClassName;
+    private final BindType bindType;
+
+    public static enum BindType {
+        CLASS, OBJECT
+    };
+
+    public VMBindException(String msg, String bindingClassName, BindType bindType) {
+        super(msg);
+        this.bindingClassName = bindingClassName;
+        this.bindType = bindType;
+    }
+
+    public String getBindingClassName() {
+        return bindingClassName;
+    }
+
+    public BindType getBindType() {
+        return bindType;
+    }
 }

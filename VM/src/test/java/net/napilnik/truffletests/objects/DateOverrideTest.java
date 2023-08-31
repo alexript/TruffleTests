@@ -18,14 +18,14 @@ package net.napilnik.truffletests.objects;
 import net.napilnik.truffletests.vm.nesting.Nesting;
 import java.util.Date;
 import net.napilnik.truffletests.vm.VM;
-import net.napilnik.truffletests.vm.VMAccess;
 import net.napilnik.truffletests.vm.VMContext;
-import net.napilnik.truffletests.vm.VMContextInjection;
 import net.napilnik.truffletests.vm.VMException;
 import net.napilnik.truffletests.vm.VMScript;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
+import net.napilnik.truffletests.vm.annotations.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMClass;
 
 /**
  *
@@ -84,7 +84,7 @@ public class DateOverrideTest {
         }
     }
 
-    @VMContextInjection(contextObjectName = "Date")
+    @VMClass(value = "Date")
     public static class DateOverride2 {
 
         @VMAccess

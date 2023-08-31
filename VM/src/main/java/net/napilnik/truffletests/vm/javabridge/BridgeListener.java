@@ -16,6 +16,7 @@
 package net.napilnik.truffletests.vm.javabridge;
 
 import net.napilnik.truffletests.vm.VMContext;
+import net.napilnik.truffletests.vm.VMException;
 import net.napilnik.truffletests.vm.events.VMContextEvent;
 import net.napilnik.truffletests.vm.events.VMContextEventType;
 import net.napilnik.truffletests.vm.events.VMContextListener;
@@ -28,13 +29,20 @@ import net.napilnik.truffletests.vm.nesting.Nesting;
 public class BridgeListener implements VMContextListener {
 
     @Override
-    public void onEvent(VMContextEvent event) {
+    public void onEvent(VMContextEvent event) throws VMException {
         if (event.getType() == VMContextEventType.Bridging && event instanceof BridgeEvent bridgeEvent) {
             onBridge(bridgeEvent.getSource(), bridgeEvent.getNesting());
         }
     }
 
-    private void onBridge(VMContext source, Nesting nesting) {
+    /**
+     * Отреагировать на добавление класса или объекта.
+     *
+     * @param source контекст, на который добавлен класс или объект.
+     * @param nesting стратегия вкладывания.
+     * @throws VMException
+     */
+    private void onBridge(VMContext source, Nesting nesting) throws VMException {
         switch (nesting) {
             case None ->
                 GlobalBindings.bind(source);

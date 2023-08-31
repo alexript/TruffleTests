@@ -16,14 +16,14 @@
 package net.napilnik.truffletests.objects;
 
 import java.util.Arrays;
-import net.napilnik.truffletests.vm.VMAccess;
-import net.napilnik.truffletests.vm.VMContextInjection;
+import net.napilnik.truffletests.vm.annotations.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMClass;
 
 /**
  *
  * @author malyshev
  */
-@VMContextInjection(contextObjectName = "Pair")
+@VMClass(value = "Pair")
 public class Pair {
 
     private Object head;

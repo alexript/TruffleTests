@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.napilnik.truffletests.vm;
+package net.napilnik.truffletests.vm.annotations;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
+ * Позволяет доставить в Javascript класс
  *
  * @author malyshev
  */
-public class VMNoFunctionException extends VMException {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(value = ElementType.TYPE)
+public @interface VMClass {
 
-    private static final long serialVersionUID = -2420955348318739894L;
-    private final String functionName;
-
-    public VMNoFunctionException(String msg, String functionName) {
-        super(msg);
-        this.functionName = functionName;
-    }
-
-    public String getFunctionName() {
-        return functionName;
-    }
-
+    String value();
 }

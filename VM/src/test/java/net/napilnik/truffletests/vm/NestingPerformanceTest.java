@@ -48,6 +48,10 @@ public class NestingPerformanceTest {
     }
 
     private static void executeNesting(String testName, Nesting outerNesting, Nesting innerNesting) throws VMException {
+        executeNesting(testName, outerNesting, innerNesting, 1);
+    }
+
+    private static void executeNesting(String testName, Nesting outerNesting, Nesting innerNesting, int nestingsNum) throws VMException {
         VMContext root = VM.root(testName);
         Date now = new Date();
         System.out.println("-ts- Test: %1$s --------- <start: %2$tH:%2$tM:%2$tS> --------".formatted(testName, now));
@@ -55,14 +59,17 @@ public class NestingPerformanceTest {
             context.eval(testScript);
 
             Date fullfill = new Date();
-            System.out.println("-ts- Test: %1$s -------------- <fullfill: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, fullfill, fullfill.getTime() - now.getTime()));
+            System.out.println("-ts- Test: %1$s -------------- <fullfill %4$d times: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, fullfill, fullfill.getTime() - now.getTime(), nestingsNum));
 
-            try (VMContext nestedContext = VM.context("NestedContext", context, innerNesting)) {
+            for (int i = 0; i < nestingsNum; i++) {
+                try (VMContext nestedContext = VM.context("NestedContext", context, innerNesting)) {
 
+                }
             }
 
             Date nested = new Date();
-            System.out.println("-ts- Test: %1$s -------------- <nested: %2$tH:%2$tM:%2$tS, len: %3$dms> ---".formatted(testName, nested, nested.getTime() - fullfill.getTime()));
+            long len = nested.getTime() - fullfill.getTime();
+            System.out.println("-ts- Test: %1$s -------------- <nested %5$d times: %2$tH:%2$tM:%2$tS, len: %3$dms, %4$dms per time> ---".formatted(testName, nested, len, len / nestingsNum, nestingsNum));
 
             System.out.println("-te- Test: %1$s --------- <end: %2$tH:%2$tM:%2$tS, len: %3$dms> --------\n".formatted(testName, now, nested.getTime() - now.getTime()));
         }
@@ -152,6 +159,17 @@ public class NestingPerformanceTest {
     public void testCacheCachePerfomance() {
         try {
             executeNesting("testCacheCachePerfomance", Nesting.Cache, Nesting.Cache);
+        } catch (VMException ex) {
+            fail(ex);
+        }
+        assertTrue(true);
+    }
+
+    @Test
+    public void testNoneToSomethingAvrg() {
+        try {
+            executeNesting("test None -> Cache avg", Nesting.None, Nesting.Cache, 100);
+            executeNesting("test None -> Naive avg", Nesting.None, Nesting.Naive, 100);
         } catch (VMException ex) {
             fail(ex);
         }

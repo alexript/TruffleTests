@@ -18,6 +18,7 @@ package net.napilnik.executor;
 import net.napilnik.app.App;
 import net.napilnik.truffletests.vm.Evaluator;
 import net.napilnik.truffletests.vm.VMException;
+import net.napilnik.truffletests.vm.VMNoFunctionException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,25 +28,55 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class ExecutorsPoolTest {
 
-    public ExecutorsPoolTest() {
-    }
-
-    @Test
-    public void testGet() {
+    private static int usecaseFor(int total, ExecutorsPool pool) throws VMException {
         App app = new App("pooltest", "ExecutorsPool test");
         app.addScript("summ.js", "function incOne(i) { return i+1; }");
         int result = 0;
-        int total = 100;
         for (int i = 0; i < total; i++) {
             try {
-                Evaluator evaluator = ExecutorsPool.get(app);
+                Evaluator evaluator = pool.get(app);
                 result = evaluator.eval("incOne", Integer.class, result);
             } catch (VMException ex) {
                 System.out.println("result: %d, step: %d".formatted(result, i));
-                fail(ex);
+                throw ex;
             }
         }
-        assertEquals(total, result);
+        return result;
+    }
+
+    @Test
+    public void testNaiveGet() {
+        System.out.println("testNaiveGet");
+        try {
+            int total = 100;
+            int result = usecaseFor(total, ExecutorsPool.NAIVE);
+            assertEquals(total, result);
+        } catch (VMException ex) {
+            fail(ex);
+        }
+    }
+
+    @Test
+    public void testNoneGet() {
+        System.out.println("testNoneGet");
+        VMNoFunctionException ex = assertThrows(VMNoFunctionException.class, () -> {
+            int total = 100;
+            int result = usecaseFor(total, ExecutorsPool.NONE);
+            assertNotEquals(total, result);
+        });
+        assertEquals("incOne", ex.getFunctionName());
+    }
+
+    @Test
+    public void testCacheGet() {
+        System.out.println("testCacheGet");
+        try {
+            int total = 100;
+            int result = usecaseFor(total, ExecutorsPool.CAHCE);
+            assertEquals(total, result);
+        } catch (VMException ex) {
+            fail(ex);
+        }
     }
 
 }

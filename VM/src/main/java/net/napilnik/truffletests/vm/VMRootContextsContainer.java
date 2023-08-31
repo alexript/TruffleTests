@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.napilnik.truffletests.vm.javabridge.BindObjectListener;
 import net.napilnik.truffletests.vm.javabridge.HostAccessListener;
+import org.graalvm.polyglot.HostAccess;
 
 /**
  *
@@ -30,7 +31,12 @@ class VMRootContextsContainer {
     protected static final VMContext GLOBALCONTEXT = createGlobal();
 
     private static VMContext createGlobal() {
-        VM.addContextListener(new HostAccessListener()); // To be sure
+        VM.addContextListener(new HostAccessListener() {
+            @Override
+            public void specify(HostAccess.Builder builder) {
+                // пока ничего не делаем.
+            }
+        }); // To be sure
         VM.addContextListener(new BindObjectListener()); // To be sure
 
         return VMContext.constructRootContext(GLOBAL_ROOT_CONTEXT_NAME, true);

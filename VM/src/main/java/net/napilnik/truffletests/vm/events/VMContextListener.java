@@ -16,13 +16,21 @@
 package net.napilnik.truffletests.vm.events;
 
 import java.util.EventListener;
+import net.napilnik.truffletests.vm.VMException;
 
 /**
+ * Слушатель событий контекста выполнения.
  *
  * @author malyshev
  */
 public interface VMContextListener extends EventListener {
 
-    void onEvent(VMContextEvent event);
+    /**
+     * Обработать событие.
+     *
+     * @param event событие
+     * @throws VMException
+     */
+    void onEvent(VMContextEvent event) throws VMException;
 
 }

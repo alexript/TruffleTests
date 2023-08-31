@@ -21,6 +21,8 @@ import java.util.Map;
 import net.napilnik.truffletests.vm.javabridge.BindObjectEvent;
 
 /**
+ * Ребиндер. Используется для переноса биндингов в "дочерние" контексты
+ * выполнения.
  *
  * @author malyshev
  */
@@ -37,7 +39,7 @@ public final class ReBinder {
         this.childs = childs;
     }
 
-    public void rebind(BindObjectEvent bindObjectEvent) {
+    public final void rebind(BindObjectEvent bindObjectEvent) {
         if (childs != null && !childs.isEmpty()) {
             Map<String, Object> boundObjects = bindObjectEvent.getBindings();
             if (!boundObjects.isEmpty()) {

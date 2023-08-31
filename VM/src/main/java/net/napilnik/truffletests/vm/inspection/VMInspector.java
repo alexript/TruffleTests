@@ -22,6 +22,7 @@ import org.graalvm.polyglot.management.ExecutionEvent;
 import org.graalvm.polyglot.management.ExecutionListener;
 
 /**
+ * Инспектор выполнения.
  *
  * @author malyshev
  */
@@ -29,6 +30,9 @@ public class VMInspector implements AutoCloseable {
 
     private final ExecutionListener listener;
 
+    /**
+     * Слушатель событий инспектора.
+     */
     public static abstract class Listener implements Consumer<ExecutionEvent> {
 
     }

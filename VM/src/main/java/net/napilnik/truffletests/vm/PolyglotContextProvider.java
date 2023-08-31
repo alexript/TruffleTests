@@ -18,6 +18,8 @@ package net.napilnik.truffletests.vm;
 import org.graalvm.polyglot.Context;
 
 /**
+ * Предоставлятор полиглот-контекста. Я не знаю, почему я сделал его абстрактным
+ * классом, а не интерфейсом.
  *
  * @author malyshev
  */
@@ -35,6 +37,5 @@ public abstract class PolyglotContextProvider {
     public String toString() {
         return "PolyglotContextProvider: %s".formatted(getName());
     }
-
 
 }

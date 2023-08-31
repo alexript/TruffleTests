@@ -19,6 +19,7 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.management.ExecutionEvent;
 
 /**
+ * Конкретный слушатель событий инспектора.
  *
  * @author malyshev
  */

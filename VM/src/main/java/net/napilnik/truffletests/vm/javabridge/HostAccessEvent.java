@@ -20,6 +20,7 @@ import net.napilnik.truffletests.vm.events.VMContextEventType;
 import org.graalvm.polyglot.HostAccess;
 
 /**
+ * Событие создания правил доступа.
  *
  * @author malyshev
  */

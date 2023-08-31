@@ -16,16 +16,20 @@
 package net.napilnik.executor;
 
 import net.napilnik.app.App;
-import net.napilnik.truffletests.vm.VMAccess;
-import net.napilnik.truffletests.vm.VMContextInjection;
+import net.napilnik.truffletests.vm.annotations.VMAccess;
+import net.napilnik.truffletests.vm.annotations.VMObject;
 
 /**
+ * Глобальный объект Application в контексте Javascript
  *
  * @author malyshev
  */
-@VMContextInjection(contextObjectName = "Application")
+@VMObject(value = "Application")
 public class AppObject {
 
+    /**
+     * Мнемоника приложения.
+     */
     @VMAccess
     public final String mnemo;
 

@@ -18,14 +18,16 @@ package net.napilnik.truffletests.vm.javabridge;
 import net.napilnik.truffletests.objects.DateOverride;
 import net.napilnik.truffletests.objects.Pair;
 import net.napilnik.truffletests.vm.VMContext;
+import net.napilnik.truffletests.vm.VMException;
 
 /**
+ * Добавлятор базовых классов и объектов на контекст выполнения.
  *
  * @author malyshev
  */
 class GlobalBindings {
 
-    protected static void bind(VMContext ctx) {
+    protected static void bind(VMContext ctx) throws VMException {
         ctx.addClass(DateOverride.class);
         ctx.addClass(Pair.class);
     }

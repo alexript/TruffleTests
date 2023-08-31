@@ -22,11 +22,19 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
 /**
+ * Вкладываем по-наивному.
  *
  * @author malyshev
  */
 class NaiveListener implements VMContextNestingListener {
 
+    /**
+     * Перебираем все биндинги родителя и кладем их в дочку
+     *
+     * @param language
+     * @param parentContext
+     * @param ctx
+     */
     @Override
     public void onNesting(VMLanguage language, Context parentContext, Context ctx) {
 

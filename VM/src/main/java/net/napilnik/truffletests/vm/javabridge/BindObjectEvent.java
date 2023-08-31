@@ -15,9 +15,7 @@
  */
 package net.napilnik.truffletests.vm.javabridge;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import net.napilnik.truffletests.vm.ReBinder;
 import net.napilnik.truffletests.vm.VMContext;
@@ -51,14 +49,29 @@ public class BindObjectEvent extends VMContextEvent<VMContext> {
         bindings = new HashMap<>(javaObjects);
     }
 
+    /**
+     * Получить стратегию вкладывания.
+     *
+     * @return стратегия
+     */
     public final Nesting getNesting() {
         return nesting;
     }
 
+    /**
+     * Получить перебиндера.
+     *
+     * @return перебиндер
+     */
     public final ReBinder getRebinder() {
         return rebinder;
     }
 
+    /**
+     * Получить биндинги события.
+     *
+     * @return биндинги
+     */
     public final Map<String, Object> getBindings() {
         return bindings;
     }

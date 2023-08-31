@@ -18,9 +18,10 @@ package net.napilnik.truffletests.vm.events;
 import java.util.EventObject;
 
 /**
+ * Событие, возникающее в контексте на каком-то источнике внутри конеткста.
  *
+ * @param <SOURCE> Источник события.
  * @author malyshev
- * @param <SOURCE>
  */
 public class VMContextEvent<SOURCE> extends EventObject {
 
@@ -32,10 +33,20 @@ public class VMContextEvent<SOURCE> extends EventObject {
         this.type = eventType;
     }
 
+    /**
+     * Получить тип события.
+     *
+     * @return тип события
+     */
     public final VMContextEventType getType() {
         return type;
     }
 
+    /**
+     * Получить источник события.
+     *
+     * @return источник события.
+     */
     @Override
     public final SOURCE getSource() {
         return (SOURCE) super.getSource();

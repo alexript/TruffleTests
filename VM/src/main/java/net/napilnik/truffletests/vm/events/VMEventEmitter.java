@@ -16,10 +16,11 @@
 package net.napilnik.truffletests.vm.events;
 
 /**
+ * Интерфейс источника событий.
  *
+ * @param <EVENT> тип события
+ * @param <LISTENER> тип слушателя
  * @author malyshev
- * @param <EVENT>
- * @param <LISTENER>
  */
 public interface VMEventEmitter<EVENT, LISTENER> {
 

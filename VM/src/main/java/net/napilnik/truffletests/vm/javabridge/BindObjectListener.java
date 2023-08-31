@@ -21,6 +21,7 @@ import net.napilnik.truffletests.vm.events.VMContextListener;
 import net.napilnik.truffletests.vm.nesting.Nesting;
 
 /**
+ * Реакция на добавление класса или объекта. Обеспечивает ребинд.
  *
  * @author malyshev
  */

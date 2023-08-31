@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.napilnik.truffletests.vm.annotations.VMClass;
+import net.napilnik.truffletests.vm.annotations.VMObject;
 import net.napilnik.truffletests.vm.javabridge.BindObjectEvent;
 import net.napilnik.truffletests.vm.javabridge.BindObjectListener;
 import net.napilnik.truffletests.vm.javabridge.BridgeEvent;
@@ -40,6 +42,8 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
 /**
+ * Контекст выполнения. Является фасадом к полиглот-контексту и обеспечивает
+ * вложение контекстов по стратегии вложения.
  *
  * @author malyshev
  */
@@ -74,8 +78,9 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private static VMContext constructNewRootContext(String contextName) {
-        VMContext vmContext = new VMContext("<RootContext" + contextName + ">", VMLanguage.JS, null, Nesting.None, false);
-        fireBridgeEvent(new BridgeEvent(vmContext, Nesting.None));
+        Nesting nestingmodeForRootContext = Nesting.None;
+        VMContext vmContext = new VMContext("<RootContext" + contextName + ">", VMLanguage.JS, null, nestingmodeForRootContext, false);
+        fireBridgeEvent(new BridgeEvent(vmContext, nestingmodeForRootContext));
 
         try {
             VMStdLib.apply(vmContext);
@@ -114,8 +119,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .allowValueSharing(true)
                 .allowExperimentalOptions(true)
                 .allowInnerContextOptions(true)
-                .allowEnvironmentAccess(EnvironmentAccess.INHERIT)
-                .hostClassLoader(VM.class.getClassLoader());
+                .allowEnvironmentAccess(EnvironmentAccess.INHERIT);
 
         Engine engine;
         if (parent == null) {
@@ -155,41 +159,43 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
         return ctx;
     }
 
-    public void addClass(Class someClass) {
-        VMContextInjection annotation;
+    public void addClass(Class someClass) throws VMException {
+        VMClass annotation;
         try {
-            annotation = (VMContextInjection) someClass.getAnnotation(VMContextInjection.class);
+            annotation = (VMClass) someClass.getAnnotation(VMClass.class);
         } catch (NullPointerException ex) {
             annotation = null;
         }
         String identificator;
         if (annotation == null) {
             identificator = someClass.getName();
+            throw new VMBindException("Binded class %s is not annotated".formatted(identificator), identificator, VMBindException.BindType.CLASS);
         } else {
-            identificator = annotation.contextObjectName();
+            identificator = annotation.value();
+            addObject(identificator, someClass);
         }
-        addObject(identificator, someClass);
     }
 
-    public void addObject(Object object) {
-        VMContextInjection annotation;
+    public void addObject(Object object) throws VMException {
+        VMObject annotation;
         try {
-            annotation = object.getClass().getAnnotation(VMContextInjection.class);
+            annotation = object.getClass().getAnnotation(VMObject.class);
         } catch (NullPointerException ex) {
             annotation = null;
         }
         String identificator;
         if (annotation == null) {
             identificator = object.getClass().getName();
+            throw new VMBindException("Binded object %s is not annotated".formatted(identificator), identificator, VMBindException.BindType.OBJECT);
         } else {
-            identificator = annotation.contextObjectName();
+            identificator = annotation.value();
+            addObject(identificator, object);
         }
-        addObject(identificator, object);
     }
 
     private final Map<String, Object> appliedObjects = new HashMap<>();
 
-    public void addObject(String identificator, Object object) {
+    protected void addObject(String identificator, Object object) {
         Object jsObject = prepareJSObject(object);
         applyAccessors(identificator, jsObject);
         bindObject(identificator, jsObject);
@@ -297,19 +303,27 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
     }
 
     private static void fireBridgeEvent(BridgeEvent event) {
-        VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        synchronized (event.getSource()) {
+            VM.getContextEventEmitter().emitEvent(event, BridgeListener.class);
+        }
     }
 
     private static void fireBindObjectEvent(BindObjectEvent event) {
-        VM.getContextEventEmitter().emitEvent(event, BindObjectListener.class);
+        synchronized (event.getSource()) {
+            VM.getContextEventEmitter().emitEvent(event, BindObjectListener.class);
+        }
     }
 
     private static void fireContextNestingEvent(VMContextNestingEvent event) {
-        VM.getContextEventEmitter().emitEvent(event, VMContextNestingListener.class);
+        synchronized (event.getSource()) {
+            VM.getContextEventEmitter().emitEvent(event, VMContextNestingListener.class);
+        }
     }
 
     private static void fireHostAccessEvent(HostAccessEvent event) {
-        VM.getContextEventEmitter().emitEvent(event, HostAccessListener.class);
+        synchronized (event.getSource()) {
+            VM.getContextEventEmitter().emitEvent(event, HostAccessListener.class);
+        }
     }
 
 }

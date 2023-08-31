@@ -20,6 +20,7 @@ import java.util.Date;
 import org.graalvm.polyglot.Value;
 
 /**
+ * Поддержка стандартной библиотеки.
  *
  * @author malyshev
  */

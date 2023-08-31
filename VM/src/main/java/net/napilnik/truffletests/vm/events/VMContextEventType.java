@@ -16,13 +16,29 @@
 package net.napilnik.truffletests.vm.events;
 
 /**
+ * Тип события.
  *
  * @author malyshev
  */
 public enum VMContextEventType {
+    /**
+     * Создание нового корневого контекста.
+     */
     Bridging,
+    /**
+     * Построение нового контекса полиглота.
+     */
     HostAccess,
+    /**
+     * Добавление на контекст нового java-класса или java-объекта.
+     */
     BindObject,
+    /**
+     * После создания нового полиглот-контекста.
+     */
     Nesting,
+    /**
+     * Окончание создания нового контекста выполнения.
+     */
     ContextPrepared;
 }

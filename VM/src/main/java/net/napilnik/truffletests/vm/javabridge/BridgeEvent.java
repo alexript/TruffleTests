@@ -34,6 +34,11 @@ public class BridgeEvent extends VMContextEvent<VMContext> {
         this.nesting = nesting;
     }
 
+    /**
+     * Получить стратегию вкладывания.
+     *
+     * @return стратегия
+     */
     public final Nesting getNesting() {
         return nesting;
     }

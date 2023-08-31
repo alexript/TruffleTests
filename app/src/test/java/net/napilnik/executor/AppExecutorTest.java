@@ -25,6 +25,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class AppExecutorTest {
 
+    /**
+     * Проверяем что скрипт приложения интерпретировался и объявленную в нем
+     * функцию можно использовать.
+     */
     @Test
     public void testAppObject() {
         String appMnemo = "appobjtest";

@@ -22,6 +22,8 @@ import net.napilnik.truffletests.vm.events.VMContextListener;
 import org.graalvm.polyglot.Context;
 
 /**
+ * Слушатель события вложения контекста выполнения в родительский контекст
+ * выполнения.
  *
  * @author malyshev
  */
@@ -40,8 +42,24 @@ public interface VMContextNestingListener extends VMContextListener {
         }
     }
 
+    /**
+     * Получить стратегию вложения, для которой срабатывает этот конкретный
+     * слушатель.
+     *
+     * @return стратегия вложения этого слушателя
+     */
     Nesting getListenerNesting();
 
+    /**
+     * Отреагировать на событие вложения контекста выполнения в родительский
+     * контекст выполнения.
+     *
+     * @param language язык программирования
+     * @param parentContext полиглотный контекст родительского контекста
+     * выполнения
+     * @param ctx полиглотный контекст вкладываемого дочернего контекста
+     * выполнения
+     */
     void onNesting(VMLanguage language, Context parentContext, Context ctx);
 
 }

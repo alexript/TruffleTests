@@ -15,24 +15,56 @@
  */
 package net.napilnik.executor;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.napilnik.app.App;
 import net.napilnik.truffletests.vm.Evaluator;
+import net.napilnik.truffletests.vm.nesting.Nesting;
 
 /**
+ * Пул корневых контекстов приложений. Служит их кэшем. Причем, я не предлагаю
+ * программисту создавать пул. Я даю уже готовые. Изолированные друг от друга.
  *
  * @author malyshev
  */
 public class ExecutorsPool {
 
-    private static final Map<String, AppExecutor> pool = new HashMap<>();
+    private final Nesting userContextNestingMode;
 
-    public static Evaluator get(App app) {
+    /**
+     * Пул, на котором контекст вызова создается Naive нестингом.
+     */
+    public static final ExecutorsPool NAIVE = new ExecutorsPool(Nesting.Naive);
+
+    /**
+     * Пул, на котором контекст вызова создается Cache нестингом.
+     */
+    public static final ExecutorsPool CAHCE = new ExecutorsPool(Nesting.Cache);
+
+    /**
+     * Пул, на котором контекст вызова создается None нестингом.
+     */
+    public static final ExecutorsPool NONE = new ExecutorsPool(Nesting.None);
+
+    private ExecutorsPool(Nesting userContextNestingMode) {
+        this.userContextNestingMode = userContextNestingMode;
+    }
+
+    private final Map<String, AppExecutor> pool = new ConcurrentHashMap<>();
+
+    /**
+     * Получить исполнитель для приложения.
+     *
+     * @param app приложение
+     * @return исполнитель
+     */
+    public Evaluator get(App app) {
         String mnemo = app.getMnemo();
+
         if (!pool.containsKey(mnemo)) {
-            pool.put(mnemo, new AppExecutor(app));
+            pool.put(mnemo, new AppExecutor(app, userContextNestingMode));
         }
-        return pool.get(mnemo);
+        Evaluator ev = pool.get(mnemo);
+        return ev;
     }
 }

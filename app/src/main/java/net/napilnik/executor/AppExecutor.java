@@ -27,6 +27,9 @@ import net.napilnik.truffletests.vm.VMScript;
 import net.napilnik.truffletests.vm.nesting.Nesting;
 
 /**
+ * Хитрожопый контейнер контекста для приложения. Смысл в том, что для
+ * приложения создается корневой контекст без нестинга. А под каждый вызов на
+ * исполнение создается дочерний контекст с кэширующим нестингом.
  *
  * @author malyshev
  */
@@ -34,28 +37,38 @@ class AppExecutor implements Evaluator {
 
     private final App app;
     private final VMContext appContext;
+    private final Nesting userContextNestingMode;
 
     public AppExecutor(App app) {
+        this(app, Nesting.Cache);
+    }
+
+    public AppExecutor(App app, Nesting userContextNestingMode) {
         this.app = app;
         this.appContext = VM.root(app.getMnemo());
+        this.userContextNestingMode = userContextNestingMode;
         initAppContext();
     }
 
     private VMContext getUserContext() {
-        return VM.context(appContext, Nesting.Cache);
+        return VM.context(appContext, userContextNestingMode);
     }
 
     private void initAppContext() {
-        appContext.addObject(new AppObject(app));
+        try {
+            appContext.addObject(new AppObject(app));
 
-        Map<String, String> scripts = app.getScripts();
-        for (Map.Entry<String, String> entry : scripts.entrySet()) {
-            try {
-                VMScript s = new VMScript(entry.getKey(), entry.getValue());
-                appContext.eval(s);
-            } catch (VMException ex) {
-                Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
+            Map<String, String> scripts = app.getScripts();
+            for (Map.Entry<String, String> entry : scripts.entrySet()) {
+                try {
+                    VMScript s = new VMScript(entry.getKey(), entry.getValue());
+                    appContext.eval(s);
+                } catch (VMException ex) { // Отдельный catch на каждую итерацию, чтоб пропустить бяку, а не остановиться после первой же бяки.
+                    Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        } catch (VMException ex) {
+            Logger.getLogger(AppExecutor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
