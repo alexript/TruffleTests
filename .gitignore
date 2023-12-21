@@ -1,3 +1,5 @@
 target
-/nbproject/
-/app/nbproject/
+nbproject
+.settings
+.classpath
+.project
