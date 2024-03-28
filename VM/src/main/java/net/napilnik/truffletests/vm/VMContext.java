@@ -118,7 +118,7 @@ public class VMContext extends VMEvaluator implements AutoCloseable {
                 .allowCreateThread(true)
                 .allowValueSharing(true)
                 .allowExperimentalOptions(true)
-                .allowInnerContextOptions(true)
+//                .allowInnerContextOptions(true)
                 .allowEnvironmentAccess(EnvironmentAccess.INHERIT);
 
         Engine engine;
